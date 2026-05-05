@@ -1,67 +1,98 @@
-# Mini Web Vulnerability Scanner
 
-A lightweight, modular, asynchronous web vulnerability scanner implemented in Python. Designed for research, learning, and small-scale assessments, the scanner provides extensible detectors, a flexible payload engine, and both CLI and web-based interfaces.
+# Mini Web Vulnerability Scanner — Async, modular educational scanner
 
-**Key Features**
-- Async HTTP engine using `aiohttp` for high-concurrency scanning
-- Modular vulnerability detectors: reflected XSS, SQL injection (error & time-based), open redirect, SSRF
-- Payload engine with tagging and mutations (URL-encoding, double-encoding, case variants)
-- Form discovery and parameter injection via a lightweight crawler
-- Structured JSON and optional HTML reports for easy consumption
-- CLI for scripted runs and a simple Flask-based UI for interactive sessions
+An asynchronous, modular web vulnerability scanner implemented in Python. Built for learning and small-scale authorized assessments, the project demonstrates practical vulnerability detection patterns (XSS, SQLi, SSRF, Open Redirect), payload engineering, and test-driven development for security tools.
 
-**Quickstart (Windows PowerShell)**
-1. Install Python 3.11 (recommended).
-2. From the project root:
+## What this solves
+Provides a lightweight, extensible framework for discovering common web vulnerabilities across application endpoints while demonstrating safe scanning practices (rate limiting, private-IP checks, and scoped scanning).
+
+## Key features
+- Reflected XSS detection (tokenized reflection + basic context checks)
+- SQL injection detection (error-based and time-based techniques)
+- SSRF detection and Open Redirect discovery with private-IP protection
+- Asynchronous scanning engine using `aiohttp` for concurrency
+- URL/path crawler and form/parameter discovery
+- Payload engine with tagging and simple mutations (URL-encoding, double-encoding)
+- JSON and HTML reporting for automation and human review
+- Minimal Flask demo UI and CLI for quick demonstrations
+
+## Architecture overview
+- `core/` — orchestrator, concurrent scanner, crawler, payload engine, analyzer, reporter
+- `modules/` — independent vulnerability detectors (`xss.py`, `sqli.py`, `open_redirect.py`, `ssrf.py`) that implement a simple detection contract
+- `utils/` — HTTP helpers, logging, rate limiting, network checks, configuration
+- `payloads/` — canonical and advanced payload lists
+- `tests/` — unit and integration-style tests using `pytest` and `pytest-asyncio`
+
+## Installation (recommended: Windows PowerShell)
+1. Install Python 3.11: https://www.python.org/downloads/release/python-3110/
+2. Create and activate a virtual environment from the project root:
 
 ```powershell
 py -3.11 -m venv venv311
 .\venv311\Scripts\Activate.ps1
 python -m pip install --upgrade pip setuptools wheel
 python -m pip install --prefer-binary -r requirements.txt
+```
+
+## Running the test suite
+
+```powershell
 python -m pip install pytest pytest-asyncio
 python -m pytest -q
 ```
 
-**Usage — CLI**
-- Run a scan from the command line:
+## Usage examples
+
+**Quick CLI scan**
 
 ```powershell
-python cli.py --target https://target.example --output reports/target.json
+python cli.py --target https://example.com --output reports/example.json --concurrency 8 --timeout 15
 ```
 
-**Usage — Web UI**
-- Start the Flask demo UI and open your browser:
+**Common flags**
+- `--target` (required): target URL
+- `--output`: JSON output file
+- `--concurrency`: workers
+- `--timeout`: request timeout (s)
+
+**Run the demo web UI** (development only):
 
 ```powershell
-python run.py
-# then open http://127.0.0.1:5000
+python web/app.py
+# open http://127.0.0.1:5000
 ```
 
-**Project layout**
-- `core/` — scanner orchestrator, crawler, payload engine, analyzer, reporter
-- `modules/` — vulnerability modules (`xss`, `sqli`, `open_redirect`, `ssrf`)
-- `utils/` — HTTP helpers, logging, rate limiting, network utilities
-- `payloads/` — curated payload lists and mutation rules
-- `reports/` — generated JSON and HTML reports
-- `web/` — Flask-based user interface and example front-end
-- `tests/` — unit and integration tests (pytest + pytest-asyncio)
+## Sample output (JSON, trimmed)
 
-**Development & Testing**
-- Create a development virtual environment and install dependencies (see Quickstart).
-- Run unit tests:
-
-```powershell
-python -m pytest -q
+```json
+{
+  "target": "https://example.com",
+  "summary": { "scanned_paths": 12, "findings": 2 },
+  "findings": [
+    {
+      "type": "xss",
+      "path": "/search",
+      "param": "q",
+      "payload": "<script>alert(1)</script>",
+      "evidence": "reflected in response body",
+      "confidence": "medium"
+    }
+  ]
+}
 ```
 
-**Responsible Use**
-This project is educational. Only scan systems you own or have explicit permission to test. Misuse may be illegal and unethical.
+## Design notes to reduce false positives
+- The scanner uses tokenized payloads and response-diff heuristics. For higher confidence, combine token reflection with context-aware checks (HTML body vs attribute) and known-error patterns for SQLi.
 
-**Contributing**
-- Contributions are welcome — open issues or submit pull requests. Please include tests for new detectors and follow the existing module pattern.
+## Ethical & legal disclaimer
+Only run this scanner against systems you own or have explicit authorization to test. Misuse of this tool may be illegal and unethical. The project is provided for educational purposes only.
 
-**License**
-This repository is distributed under the MIT License. Add a `LICENSE` file with your preferred terms.
+## Contributing
+Keep changes small, document behavior changes, and include unit tests for new features. Use the `tests/` harness for deterministic verification.
 
-If you want, I can also add a short `docs/` section, sample scans, or CI workflow for automated tests.
+## License
+MIT — see `LICENSE` for full text.
+
+## Support / contact
+Open issues or PRs on the repository for questions or improvements.
+

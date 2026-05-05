@@ -1,0 +1,5 @@
+http://127.0.0.1 || ssrf,internal
+http://localhost || ssrf,internal
+http://169.254.169.254 || ssrf,metadata
+http://[::1] || ssrf,internal
+http://127.0.0.1:22 || ssrf,internal

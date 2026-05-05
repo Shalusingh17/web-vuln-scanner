@@ -1,0 +1,13 @@
+concurrency: 8
+timeout: 15
+rate_limit_per_host: 3
+scan_depth: 1
+follow_external: false
+user_agent: "VulnScanner/1.0"
+payload_paths:
+  xss: "payloads/xss.txt"
+  sqli: "payloads/sqli.txt"
+  xss_advanced: "payloads/xss_advanced.txt"
+  sqli_advanced: "payloads/sqli_advanced.txt"
+  ssrf_advanced: "payloads/ssrf_advanced.txt"
+  redirect_advanced: "payloads/redirect_advanced.txt"

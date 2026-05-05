@@ -1,0 +1,5 @@
+<script>alert(1)</script> || xss,reflected
+"><script>alert(1)</script> || xss,attribute
+<img src=x onerror=alert(1)> || xss,event
+<svg/onload=alert(1)> || xss,svg
+javascript:alert(1) || xss,uri

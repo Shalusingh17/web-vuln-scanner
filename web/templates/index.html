@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vuln Scanner (Web UI)</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Vuln Scanner - Web UI</h1>
+    <form method="post">
+      <input type="text" name="target_url" placeholder="https://example.com" />
+      <button type="submit">Scan</button>
+    </form>
+    {% if error %}
+      <div class="vuln">{{ error }}</div>
+    {% endif %}
+
+    {% if url and results %}
+      <h2>Findings ({{ results.findings|length }})</h2>
+      {% for f in results.findings %}
+        <div class="vuln">
+          <strong>{{ f.module }}</strong> - {{ f.url }}<br/>
+          <strong>Payload:</strong> {{ f.payload }}
+          <pre>{{ f.evidence }}</pre>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <hr>
+    <small>Educational use only. Scan only authorized targets.</small>
+  </div>
+</body>
+</html>
