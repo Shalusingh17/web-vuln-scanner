@@ -94,5 +94,5 @@ Keep changes small, document behavior changes, and include unit tests for new fe
 MIT — see `LICENSE` for full text.
 
 ## Support / contact
-Open issues or PRs on the repository for questions or improvements.
+Open issues or PRs on the repository for questions or improvements.   
 
