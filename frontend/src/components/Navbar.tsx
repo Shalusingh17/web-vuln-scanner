@@ -8,7 +8,6 @@ import {
   Shield,
   Menu,
   Zap,
-  ChevronDown,
 } from "lucide-react";
 
 const navLinks = [

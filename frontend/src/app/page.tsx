@@ -5,7 +5,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Shield, Zap, Database, Code, Lock, Globe, Search,
-  FileText, ChevronRight, CheckCircle, Terminal,
+  FileText, ChevronRight, CheckCircle,
+
   AlertTriangle, XCircle, Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

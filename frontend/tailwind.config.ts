@@ -1,20 +1,25 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 const config: Config = {
   darkMode: ["class"],
+
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+
   theme: {
     container: {
       center: true,
       padding: "2rem",
+
       screens: {
         "2xl": "1400px",
       },
     },
+
     extend: {
       colors: {
         border: "hsl(var(--border))",
@@ -72,6 +77,7 @@ const config: Config = {
           from: {
             height: "0",
           },
+
           to: {
             height: "var(--radix-accordion-content-height)",
           },
@@ -81,6 +87,7 @@ const config: Config = {
           from: {
             height: "var(--radix-accordion-content-height)",
           },
+
           to: {
             height: "0",
           },
@@ -90,6 +97,7 @@ const config: Config = {
           "0%": {
             backgroundPosition: "-200% 0",
           },
+
           "100%": {
             backgroundPosition: "200% 0",
           },
@@ -104,7 +112,7 @@ const config: Config = {
     },
   },
 
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 };
 
 export default config;
