@@ -1,0 +1,5 @@
+http://example.com || redirect,external
+//example.com || redirect,bypass
+http://\@example.com || redirect,bypass
+/%2f%2fexample.com || redirect,encoded
+https://evil.com || redirect,external
