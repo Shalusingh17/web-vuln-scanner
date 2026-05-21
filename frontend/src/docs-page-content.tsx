@@ -96,7 +96,7 @@ const fadeUp = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.08, duration: 0.4, ease: "easeOut" },
+    transition: { delay: i * 0.08, duration: 0.4, },
   }),
 };
 
@@ -283,7 +283,7 @@ export default function DocsPage() {
           </Card>
         </div>
       </section>
-      
+
       {/* ── FAQ ───────────────────────────────────────────── */}
       <section id="faq" className="py-20 px-4 bg-card/30">
         <div className="container mx-auto max-w-4xl">
