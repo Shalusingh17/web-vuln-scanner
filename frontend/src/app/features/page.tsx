@@ -445,7 +445,7 @@ export default function FeaturesPage() {
                               initial={{ width: 0 }}
                               whileInView={{ width: `${m.v}%` }}
                               viewport={{ once: true }}
-                              transition={{ duration: 0.6, ease: "easeOut" }}
+transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
                               className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_25px_-5px_rgba(34,211,238,0.5)]"
                             />
                           </div>
