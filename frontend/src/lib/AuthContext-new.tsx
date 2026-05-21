@@ -8,6 +8,7 @@ import {
   useCallback,
   ReactNode,
 } from "react";
+import { parseResponseJson } from "@/lib/parseResponseJson";
 
 // ── Types ────────────────────────────────────────────
 interface User {
@@ -49,13 +50,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             headers: { "Content-Type": "application/json" },
           });
           
-          if (res.ok) {
-            const data = await res.json();
-            if (data?.user && !cancelled) {
-              setUser(data.user);
-            }
-          } else {
-            if (!cancelled) setUser(null);
+          const parsed = await parseResponseJson<{ user?: User }>(res);
+          if (res.ok && parsed.ok && parsed.data?.user && !cancelled) {
+            setUser(parsed.data.user);
+          } else if (!cancelled) {
+            setUser(null);
           }
         } catch {
           // Not logged in
@@ -86,9 +85,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password }),
       });
 
+      const loginParsed = await parseResponseJson<{ message?: string }>(res);
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Login failed");
+        const msg = loginParsed.ok
+          ? (loginParsed.data.message ?? "Login failed")
+          : loginParsed.message;
+        throw new Error(msg);
       }
 
       // Fetch user profile
@@ -98,9 +100,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
       });
 
-      if (meRes.ok) {
-        const data = await meRes.json();
-        setUser(data?.user ?? null);
+      const meParsed = await parseResponseJson<{ user?: User }>(meRes);
+      if (meRes.ok && meParsed.ok && meParsed.data?.user) {
+        setUser(meParsed.data.user);
       }
       setToken(null);
     },
@@ -117,9 +119,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ name, email, password }),
       });
 
+      const regParsed = await parseResponseJson<{ message?: string }>(res);
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Registration failed");
+        const msg = regParsed.ok
+          ? (regParsed.data.message ?? "Registration failed")
+          : regParsed.message;
+        throw new Error(msg);
       }
 
       // Fetch user profile
@@ -129,9 +134,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
       });
 
-      if (meRes.ok) {
-        const data = await meRes.json();
-        setUser(data?.user ?? null);
+      const meParsed = await parseResponseJson<{ user?: User }>(meRes);
+      if (meRes.ok && meParsed.ok && meParsed.data?.user) {
+        setUser(meParsed.data.user);
       }
       setToken(null);
     },

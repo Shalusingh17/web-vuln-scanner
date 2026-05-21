@@ -1,32 +1,36 @@
 @import "tailwindcss";
 @layer base {
      :root {
-        --background: 222 47% 6%;
+        --background: 215 28% 7%;
         --foreground: 210 40% 95%;
-        --card: 222 47% 9%;
+        --card: 215 25% 10%;
         --card-foreground: 210 40% 95%;
-        --popover: 222 47% 9%;
+        --popover: 215 25% 10%;
         --popover-foreground: 210 40% 95%;
-        --primary: 142 71% 45%;
-        --primary-foreground: 222 47% 6%;
-        --secondary: 222 47% 13%;
+        --primary: 185 100% 50%;
+        --primary-foreground: 215 28% 7%;
+        --secondary: 195 100% 50%;
         --secondary-foreground: 210 40% 95%;
-        --muted: 222 47% 13%;
+        --muted: 215 20% 35%;
         --muted-foreground: 215 20% 55%;
-        --accent: 142 71% 45%;
-        --accent-foreground: 222 47% 6%;
+        --accent: 172 100% 50%;
+        --accent-foreground: 215 28% 7%;
         --destructive: 0 84% 60%;
         --destructive-foreground: 210 40% 98%;
-        --border: 217 33% 17%;
-        --input: 217 33% 17%;
-        --ring: 142 71% 45%;
-        --radius: 0.5rem;
+        --border: 215 30% 20%;
+        --input: 215 30% 20%;
+        --ring: 185 100% 50%;
+        --radius: 0.75rem;
         /* Custom scanner colors */
         --critical: 0 84% 60%;
         --high: 25 95% 53%;
         --medium: 45 93% 47%;
         --low: 142 71% 45%;
         --info: 210 100% 66%;
+        /* Cybersecurity theme colors */
+        --cyan: 185 100% 50%;
+        --neon-blue: 195 100% 50%;
+        --neon-green: 172 100% 50%;
     }
 }
 
@@ -92,13 +96,96 @@
     background: hsl(var(--muted-foreground));
 }
 
-
 /* Terminal font for scan output */
 
 .font-mono {
     font-family: "Courier New", Courier, monospace;
 }
 
+/* ──────────────────────────────────────────── */
+/* CYBERSECURITY THEME ANIMATIONS & EFFECTS   */
+/* ──────────────────────────────────────────── */
+
+/* Glow pulse - cyan neon effect */
+@keyframes glow-pulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(0, 229, 255, 0.3), inset 0 0 10px rgba(0, 229, 255, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(0, 229, 255, 0.6), inset 0 0 20px rgba(0, 229, 255, 0.2);
+    }
+}
+
+.glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Cyber glow border */
+@keyframes cyber-border-glow {
+    0%, 100% {
+        border-color: rgba(0, 229, 255, 0.5);
+        box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+    }
+    50% {
+        border-color: rgba(0, 229, 255, 0.8);
+        box-shadow: 0 0 30px rgba(0, 229, 255, 0.6);
+    }
+}
+
+.cyber-border-glow {
+    animation: cyber-border-glow 2s ease-in-out infinite;
+}
+
+/* Floating particles */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px) translateX(0px);
+    }
+    50% {
+        transform: translateY(-20px) translateX(10px);
+    }
+}
+
+.float {
+    animation: float 4s ease-in-out infinite;
+}
+
+/* Shimmer effect */
+@keyframes shimmer-cyber {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.shimmer-cyber {
+    animation: shimmer-cyber 3s ease-in-out infinite;
+    background-size: 200% 100%;
+}
+
+/* Gradient text animation */
+@keyframes gradient-shift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.gradient-text {
+    background: linear-gradient(90deg, #00E5FF, #00BFFF, #00FFD1, #00E5FF);
+    background-size: 200% 100%;
+    animation: gradient-shift 4s ease infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
 
 /* Scan pulse animation */
 
@@ -136,4 +223,45 @@
     50% {
         border-color: hsl(var(--primary));
     }
+}
+
+/* ──────────────────────────────────────────── */
+/* GLASSMORPHISM UTILITIES                     */
+/* ──────────────────────────────────────────── */
+
+.glass {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 229, 255, 0.1);
+}
+
+.glass-lg {
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 229, 255, 0.15);
+}
+
+.glass-subtle {
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(0, 229, 255, 0.05);
+}
+
+/* ──────────────────────────────────────────── */
+/* GRADIENT UTILITIES                          */
+/* ──────────────────────────────────────────── */
+
+.gradient-primary {
+    background: linear-gradient(135deg, #00E5FF, #00BFFF);
+}
+
+.gradient-accent {
+    background: linear-gradient(135deg, #00BFFF, #00FFD1);
+}
+
+.gradient-cyber {
+    background: linear-gradient(135deg, #00E5FF, #00FFD1, #00BFFF);
 }

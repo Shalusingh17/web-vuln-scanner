@@ -10,8 +10,12 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
+  const timer = setTimeout(() => {
     setHasMounted(true);
-  }, []);
+  }, 0);
+
+  return () => clearTimeout(timer);
+}, []);
 
   useEffect(() => {
     if (!hasMounted) return;
@@ -23,10 +27,10 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   // Show loading state while checking auth
   if (!hasMounted || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#050a0e] to-[#0a0f15] flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-foreground">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[rgba(0,255,65,0.3)] border-t-[#00ff41] rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[rgba(0,255,65,0.5)] font-mono">Loading...</p>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-2 border-cyan-500/20 border-t-cyan-400" />
+          <p className="text-sm text-gray-400">Loading…</p>
         </div>
       </div>
     );

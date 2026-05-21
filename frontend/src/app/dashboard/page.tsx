@@ -1,26 +1,21 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import Navbar from "@/components/Navbar";
 import {
   Shield,
   Scan,
-  AlertTriangle,
   CheckCircle,
   LogOut,
-  AlertCircle,
-  TrendingUp,
-  Clock,
   Loader2,
-  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
+import { parseResponseJson } from "@/lib/parseResponseJson";
 
 type Severity = "low" | "medium" | "high" | "critical";
 
@@ -28,7 +23,7 @@ interface Finding {
   type: string;
   severity: Severity;
   message: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 interface ScanResult {
@@ -41,15 +36,16 @@ interface ScanResult {
 }
 
 const severityColors: Record<Severity, string> = {
-  low: "text-blue-400 bg-blue-950 border-blue-700",
-  medium: "text-yellow-400 bg-yellow-950 border-yellow-700",
-  high: "text-orange-400 bg-orange-950 border-orange-700",
-  critical: "text-red-400 bg-red-950 border-red-700",
+  low: "text-blue-400 bg-blue-950/40 border-blue-600/50",
+  medium: "text-yellow-400 bg-yellow-950/40 border-yellow-600/50",
+  high: "text-orange-400 bg-orange-950/40 border-orange-600/50",
+  critical: "text-red-400 bg-red-950/40 border-red-600/50",
 };
+
+const cardClass = "border-cyan-500/20 bg-slate-900/50 shadow-lg shadow-cyan-500/5";
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
-  const router = useRouter();
 
   const [url, setUrl] = useState("");
   const [isScanning, setIsScanning] = useState(false);
@@ -62,6 +58,7 @@ export default function DashboardPage() {
   const canStartScan = useMemo(() => {
     if (!url.trim() || isScanning) return false;
     try {
+       
       new URL(url);
       return true;
     } catch {
@@ -69,7 +66,6 @@ export default function DashboardPage() {
     }
   }, [url, isScanning]);
 
-  // Load recent scans on mount
   useEffect(() => {
     const loadScans = async () => {
       try {
@@ -77,9 +73,14 @@ export default function DashboardPage() {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         });
-        const data = await res.json();
-        if (res.ok && data.scans) {
-          setRecentScans(data.scans);
+        const parsed = await parseResponseJson<{ scans?: ScanResult[] }>(res);
+        if (
+          res.ok &&
+          parsed.ok &&
+          parsed.data.scans &&
+          Array.isArray(parsed.data.scans)
+        ) {
+          setRecentScans(parsed.data.scans);
         }
       } catch (err) {
         console.error("Failed to load scans:", err);
@@ -105,18 +106,32 @@ export default function DashboardPage() {
         body: JSON.stringify({ url: url.trim() }),
       });
 
-      const data = await res.json();
+      const parsed = await parseResponseJson<{
+        message?: string;
+        scan?: ScanResult;
+      }>(res);
 
       if (!res.ok) {
-        setError(data.message || "Scan failed");
-        setIsScanning(false);
+        const msg = parsed.ok
+          ? (parsed.data.message ?? "Scan failed")
+          : parsed.message;
+        setError(msg);
         return;
       }
 
-      setCurrentScan(data.scan);
-      setRecentScans([data.scan, ...recentScans.slice(0, 9)]);
+      if (!parsed.ok || !parsed.data.scan) {
+        setError(
+          !parsed.ok
+            ? parsed.message
+            : "Unexpected response from server."
+        );
+        return;
+      }
+
+      setCurrentScan(parsed.data.scan);
+      setRecentScans([parsed.data.scan, ...recentScans.slice(0, 9)]);
       setUrl("");
-    } catch (err) {
+    } catch {
       setError("Connection error. Please try again.");
     } finally {
       setIsScanning(false);
@@ -131,173 +146,213 @@ export default function DashboardPage() {
   };
 
   const getSeverityCount = (findings: Finding[], sev: Severity) => {
-    return findings.filter(f => f.severity === sev).length;
+    return findings.filter((f) => f.severity === sev).length;
   };
 
   const displayScan = selectedScan || currentScan;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#050a0e] to-[#0a0f15] text-[#c8ffc8] p-4 md:p-8">
-      {/* Header with branding */}
-      <div className="max-w-7xl mx-auto mb-8">
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen overflow-x-hidden bg-slate-950 text-foreground">
+      <Navbar />
+
+      <div className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-10">
+        <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-[rgba(0,255,65,0.1)] border border-[rgba(0,255,65,0.3)] rounded flex items-center justify-center">
-              <Shield className="w-6 h-6 text-[#00ff41]" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-cyan-500/25 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 shadow-lg shadow-cyan-500/10">
+              <Shield className="h-6 w-6 text-cyan-400" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-[#00ff41] font-mono tracking-wider">VulnScanner</h1>
-              <p className="text-sm text-[rgba(0,255,65,0.5)] font-mono">Web Security Analysis Platform</p>
+              <h1 className="text-2xl font-bold tracking-tight text-white md:text-3xl">
+                Security dashboard
+              </h1>
+              <p className="text-sm text-gray-400">
+                Run scans and review risk in one place — same look as the rest
+                of VulnScanner.
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm text-[rgba(0,255,65,0.6)]">{user?.name}</p>
-              <p className="text-xs text-[rgba(0,255,65,0.4)] font-mono">{user?.email}</p>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              asChild
+              variant="outline"
+              className="border-cyan-500/30 bg-slate-900/40 text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200"
+            >
+              <Link href="/dashboard/scan">Open scan runner</Link>
+            </Button>
+            <div className="hidden text-right sm:block md:mr-2">
+              <p className="text-sm font-medium text-white">{user?.name}</p>
+              <p className="max-w-[220px] truncate text-xs text-gray-500">
+                {user?.email}
+              </p>
             </div>
             <Button
-              onClick={logout}
-              className="bg-[rgba(255,60,60,0.08)] hover:bg-[rgba(255,60,60,0.14)] border border-[rgba(255,60,60,0.35)] text-[rgba(255,100,100,0.9)]"
+              onClick={() => logout()}
+              variant="outline"
+              className="border-red-500/30 text-red-300 hover:bg-red-500/10 hover:text-red-200"
             >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
+              <LogOut className="mr-2 h-4 w-4" />
+              Log out
             </Button>
           </div>
         </div>
 
-        {/* Scan Input Card */}
-        <Card className="bg-[rgba(8,18,24,0.6)] border-[rgba(0,255,65,0.2)] mb-8">
+        <Card className={`${cardClass} mb-8`}>
           <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-4 items-end">
-              <div className="flex-1">
-                <label className="block text-xs font-mono text-[rgba(0,255,65,0.5)] mb-2 tracking-wider uppercase">
-                  Target Website URL
+            <div className="flex flex-col items-stretch gap-4 md:flex-row md:items-end">
+              <div className="flex-1 min-w-0">
+                <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-gray-400">
+                  Target website URL
                 </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[rgba(0,255,65,0.35)]">🔗</span>
-                  <Input
-                    type="url"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://example.com"
-                    className="pl-10 bg-[rgba(0,255,65,0.03)] border-[rgba(0,255,65,0.15)] text-[#c8ffc8] placeholder-[rgba(0,255,65,0.18)]"
-                    disabled={isScanning}
-                  />
-                </div>
+                <Input
+                  type="url"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="h-11 border-cyan-500/25 bg-slate-950/50 text-white placeholder:text-gray-500"
+                  disabled={isScanning}
+                />
               </div>
               <Button
                 onClick={handleStartScan}
                 disabled={!canStartScan || isScanning}
-                className="bg-[rgba(0,255,65,0.08)] hover:bg-[rgba(0,255,65,0.14)] border border-[rgba(0,255,65,0.35)] text-[#00ff41] font-mono tracking-wider md:w-auto w-full"
+                className="h-11 w-full bg-gradient-to-r from-cyan-500 to-blue-500 font-semibold text-white shadow-lg shadow-cyan-500/25 hover:from-cyan-400 hover:to-blue-400 md:w-auto"
               >
                 {isScanning ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Scanning...
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Scanning…
                   </>
                 ) : (
                   <>
-                    <Scan className="w-4 h-4 mr-2" />
-                    Start Scan
+                    <Scan className="mr-2 h-4 w-4" />
+                    Start scan
                   </>
                 )}
               </Button>
             </div>
 
             {error && (
-              <div className="mt-4 p-3 bg-[rgba(255,60,60,0.08)] border border-[rgba(255,60,60,0.3)] rounded text-sm text-[rgba(255,100,100,0.9)] font-mono">
-                ⚠ {error}
+              <div
+                role="alert"
+                className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200"
+              >
+                {error}
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Main Results Display */}
         {displayScan && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            {/* Left Column - Risk Score */}
-            <Card className="bg-[rgba(8,18,24,0.6)] border-[rgba(0,255,65,0.2)] lg:col-span-1">
+          <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <Card className={`${cardClass} lg:col-span-1`}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-mono text-[rgba(0,255,65,0.5)] tracking-wider">
-                  Risk Assessment
+                <CardTitle className="text-sm font-semibold text-gray-300">
+                  Risk assessment
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center mb-6">
-                  <div className={`inline-flex items-center justify-center w-32 h-32 rounded-full border-4 mb-4 ${
-                    displayScan.riskScore >= 80 ? "border-red-500 bg-red-950/20" :
-                    displayScan.riskScore >= 60 ? "border-orange-500 bg-orange-950/20" :
-                    displayScan.riskScore >= 40 ? "border-yellow-500 bg-yellow-950/20" :
-                    "border-green-500 bg-green-950/20"
-                  }`}>
-                    <span className="text-4xl font-bold font-mono">{displayScan.riskScore}</span>
+                <div className="mb-6 text-center">
+                  <div
+                    className={`mb-4 inline-flex h-32 w-32 items-center justify-center rounded-full border-4 ${
+                      displayScan.riskScore >= 80
+                        ? "border-red-500 bg-red-950/20"
+                        : displayScan.riskScore >= 60
+                          ? "border-orange-500 bg-orange-950/20"
+                          : displayScan.riskScore >= 40
+                            ? "border-yellow-500 bg-yellow-950/20"
+                            : "border-emerald-500 bg-emerald-950/20"
+                    }`}
+                  >
+                    <span className="text-4xl font-bold text-white">
+                      {displayScan.riskScore}
+                    </span>
                   </div>
-                  <p className="text-xs text-[rgba(0,255,65,0.4)] font-mono mb-2">Risk Score</p>
-                  <Badge className={`${severityColors[getRiskLevel(displayScan.riskScore)]} border`}>
+                  <p className="mb-2 text-xs text-gray-500">Risk score</p>
+                  <Badge
+                    className={`${severityColors[getRiskLevel(displayScan.riskScore)]} border font-mono text-[10px]`}
+                  >
                     {getRiskLevel(displayScan.riskScore).toUpperCase()}
                   </Badge>
                 </div>
 
                 <div className="space-y-3">
-                  {(["critical", "high", "medium", "low"] as Severity[]).map((sev) => {
-                    const count = getSeverityCount(displayScan.findings, sev);
-                    if (count === 0) return null;
-                    return (
-                      <div key={sev} className="flex items-center justify-between text-sm">
-                        <span className="text-xs capitalize text-[rgba(0,255,65,0.5)]">{sev}</span>
-                        <Badge variant="outline" className={severityColors[sev]}>
-                          {count}
-                        </Badge>
-                      </div>
-                    );
-                  })}
+                  {(["critical", "high", "medium", "low"] as Severity[]).map(
+                    (sev) => {
+                      const count = getSeverityCount(
+                        displayScan.findings,
+                        sev
+                      );
+                      if (count === 0) return null;
+                      return (
+                        <div
+                          key={sev}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <span className="text-xs capitalize text-gray-400">
+                            {sev}
+                          </span>
+                          <Badge
+                            variant="outline"
+                            className={severityColors[sev]}
+                          >
+                            {count}
+                          </Badge>
+                        </div>
+                      );
+                    }
+                  )}
                 </div>
 
-                <div className="mt-6 pt-6 border-t border-[rgba(0,255,65,0.1)]">
-                  <p className="text-xs text-[rgba(0,255,65,0.4)] font-mono">Scanned URL</p>
-                  <p className="text-xs text-[#00ff41] font-mono break-all mt-1">{displayScan.url}</p>
-                  <p className="text-xs text-[rgba(0,255,65,0.3)] font-mono mt-2">
+                <div className="mt-6 border-t border-cyan-500/10 pt-6">
+                  <p className="text-xs text-gray-500">Scanned URL</p>
+                  <p className="mt-1 break-all text-xs text-cyan-300">
+                    {displayScan.url}
+                  </p>
+                  <p className="mt-2 text-xs text-gray-600">
                     {new Date(displayScan.createdAt).toLocaleString()}
                   </p>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Right Columns - Findings */}
-            <Card className="bg-[rgba(8,18,24,0.6)] border-[rgba(0,255,65,0.2)] lg:col-span-2">
+            <Card className={`${cardClass} lg:col-span-2`}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-mono text-[rgba(0,255,65,0.5)] tracking-wider">
-                  Vulnerability Findings ({displayScan.findings.length})
+                <CardTitle className="text-sm font-semibold text-gray-300">
+                  Vulnerability findings ({displayScan.findings.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className="max-h-96 space-y-3 overflow-y-auto pr-1">
                   {displayScan.findings.length === 0 ? (
-                    <p className="text-sm text-[rgba(0,255,65,0.4)] text-center py-8">
-                      <CheckCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="flex flex-col items-center py-8 text-center text-sm text-gray-500">
+                      <CheckCircle className="mb-2 h-8 w-8 opacity-40" />
                       No vulnerabilities detected
                     </p>
                   ) : (
                     displayScan.findings.map((finding, idx) => (
                       <div
                         key={idx}
-                        className={`p-3 border rounded text-sm font-mono ${severityColors[finding.severity]}`}
+                        className={`rounded-lg border p-3 text-sm ${severityColors[finding.severity]}`}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <p className="text-xs uppercase tracking-wider mb-1 font-bold">
+                          <div className="min-w-0 flex-1">
+                            <p className="mb-1 text-xs font-bold uppercase tracking-wider">
                               {finding.type.replace(/_/g, " ")}
                             </p>
-                            <p className="text-xs opacity-90">{finding.message}</p>
+                            <p className="text-xs opacity-90">
+                              {finding.message}
+                            </p>
                             {finding.details && (
-                              <p className="text-xs opacity-60 mt-1">
-                                {JSON.stringify(finding.details).substring(0, 100)}...
+                              <p className="mt-1 text-xs opacity-60">
+                                {JSON.stringify(finding.details).substring(0, 100)}
+                                …
                               </p>
                             )}
                           </div>
                           <Badge
                             variant="outline"
-                            className={`${severityColors[finding.severity]} whitespace-nowrap text-xs`}
+                            className={`${severityColors[finding.severity]} shrink-0 whitespace-nowrap text-[10px]`}
                           >
                             {finding.severity}
                           </Badge>
@@ -311,46 +366,51 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Recent Scans List */}
         {!isLoadingScans && recentScans.length > 0 && (
-          <Card className="bg-[rgba(8,18,24,0.6)] border-[rgba(0,255,65,0.2)]">
+          <Card className={cardClass}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-mono text-[rgba(0,255,65,0.5)] tracking-wider">
-                Recent Scans
+              <CardTitle className="text-sm font-semibold text-gray-300">
+                Recent scans
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
+              <div className="max-h-96 space-y-2 overflow-y-auto">
                 {recentScans.map((scan) => (
-                  <div
+                  <button
                     key={scan._id}
+                    type="button"
                     onClick={() => setSelectedScan(scan)}
-                    className={`p-3 border rounded cursor-pointer transition-all ${
+                    className={`w-full rounded-lg border p-3 text-left transition-all ${
                       selectedScan?._id === scan._id
-                        ? "bg-[rgba(0,255,65,0.1)] border-[rgba(0,255,65,0.4)]"
-                        : "bg-[rgba(8,18,24,0.3)] border-[rgba(0,255,65,0.1)] hover:border-[rgba(0,255,65,0.3)]"
+                        ? "border-cyan-500/50 bg-cyan-500/10"
+                        : "border-cyan-500/15 bg-slate-950/40 hover:border-cyan-500/35"
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-mono text-[#00ff41] truncate">{scan.url}</p>
-                        <p className="text-xs text-[rgba(0,255,65,0.3)] font-mono">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium text-cyan-200">
+                          {scan.url}
+                        </p>
+                        <p className="text-xs text-gray-500">
                           {new Date(scan.createdAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <div className="flex items-center gap-3 ml-4">
+                      <div className="flex shrink-0 items-center gap-2">
                         <Badge
                           variant="outline"
-                          className={`${severityColors[getRiskLevel(scan.riskScore)]} border text-xs`}
+                          className={`${severityColors[getRiskLevel(scan.riskScore)]} border text-[10px]`}
                         >
-                          Score: {scan.riskScore}
+                          {scan.riskScore}
                         </Badge>
-                        <Badge variant="outline" className="border-[rgba(0,255,65,0.3)] text-[rgba(0,255,65,0.6)] text-xs">
+                        <Badge
+                          variant="outline"
+                          className="border-cyan-500/25 text-[10px] text-gray-400"
+                        >
                           {scan.findings.length} findings
                         </Badge>
                       </div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </CardContent>

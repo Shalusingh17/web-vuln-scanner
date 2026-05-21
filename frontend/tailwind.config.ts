@@ -2,7 +2,7 @@ import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
 
 const config: Config = {
-  darkMode: ["class"],
+  darkMode: ["class", "class"],
 
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -102,12 +102,55 @@ const config: Config = {
             backgroundPosition: "200% 0",
           },
         },
+
+        "glow-pulse": {
+          "0%, 100%": {
+            boxShadow: "0 0 10px rgba(0, 229, 255, 0.3), inset 0 0 10px rgba(0, 229, 255, 0.1)",
+          },
+          "50%": {
+            boxShadow: "0 0 20px rgba(0, 229, 255, 0.6), inset 0 0 20px rgba(0, 229, 255, 0.2)",
+          },
+        },
+
+        "cyber-glow": {
+          "0%, 100%": {
+            boxShadow: "0 0 15px rgba(0, 229, 255, 0.4), inset 0 0 15px rgba(0, 229, 255, 0.1)",
+          },
+          "50%": {
+            boxShadow: "0 0 30px rgba(0, 229, 255, 0.7), inset 0 0 25px rgba(0, 229, 255, 0.2)",
+          },
+        },
+
+        float: {
+          "0%, 100%": {
+            transform: "translateY(0px) translateX(0px)",
+          },
+          "50%": {
+            transform: "translateY(-20px) translateX(10px)",
+          },
+        },
+
+        "gradient-shift": {
+          "0%": {
+            backgroundPosition: "0% 50%",
+          },
+          "50%": {
+            backgroundPosition: "100% 50%",
+          },
+          "100%": {
+            backgroundPosition: "0% 50%",
+          },
+        },
       },
 
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 2s infinite",
+        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
+        "cyber-glow": "cyber-glow 2.5s ease-in-out infinite",
+        float: "float 4s ease-in-out infinite",
+        "gradient-shift": "gradient-shift 4s ease infinite",
       },
     },
   },

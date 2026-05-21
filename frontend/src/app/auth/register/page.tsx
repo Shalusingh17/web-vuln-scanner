@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { Shield, Eye, EyeOff } from "lucide-react";
+import { AuthPageShell } from "@/components/AuthPageShell";
+import { AnimatedButton } from "@/components/ui/AnimatedButton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { parseResponseJson } from "@/lib/parseResponseJson";
+
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -16,13 +23,15 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const validateEmail = (email: string) => {
+  const validateEmail = (value: string) => {
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return regex.test(email);
+    return regex.test(value);
   };
 
   const validatePassword = (pwd: string) => {
-    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[a-zA-Z\d!@#$%^&*]{8,}$/.test(pwd);
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[a-zA-Z\d!@#$%^&*]{8,}$/.test(
+      pwd
+    );
   };
 
   const validate = () => {
@@ -37,7 +46,8 @@ export default function RegisterPage() {
     }
 
     if (!validatePassword(password)) {
-      newErrors.password = "Password must have uppercase, lowercase, number, and special character (!@#$%^&*)";
+      newErrors.password =
+        "Use 8+ chars with upper, lower, number, and !@#$%^&*";
     }
 
     if (password !== confirmPassword) {
@@ -48,7 +58,7 @@ export default function RegisterPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
@@ -62,175 +72,218 @@ export default function RegisterPage() {
         body: JSON.stringify({ name, email, password }),
       });
 
-      const data = await res.json();
+      type RegisterErrorBody = {
+        message?: string;
+        details?: { errors?: Array<{ field: string; message: string }> };
+      };
+      const parsed = await parseResponseJson<RegisterErrorBody>(res);
 
       if (!res.ok) {
-        const errorMsg = data.message || "Registration failed";
-        if (data.details?.errors) {
+        if (parsed.ok && parsed.data.details?.errors) {
           const fieldErrors: Record<string, string> = {};
-          data.details.errors.forEach((err: any) => {
+          parsed.data.details.errors.forEach((err) => {
             fieldErrors[err.field] = err.message;
           });
           setErrors(fieldErrors);
+          toast.error("Registration failed");
+        } else if (parsed.ok) {
+          const message = parsed.data.message || "Registration failed";
+          setErrors({ general: message });
+          toast.error(message);
         } else {
-          setErrors({ general: errorMsg });
+          setErrors({ general: parsed.message });
+          toast.error(parsed.message);
         }
         return;
       }
 
+      toast.success("Account created successfully");
       router.push("/dashboard");
     } catch (err) {
-      setErrors({ general: "Connection error. Please try again." });
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Connection error. Please try again.";
+      setErrors({ general: message });
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const inputClass =
+    "h-11 border-cyan-500/20 bg-slate-950/50 px-3 text-white placeholder:text-gray-500 focus-visible:border-cyan-500/50";
+
   return (
-    <main className="min-h-screen bg-[#050a0e] flex items-center justify-center p-4 relative overflow-hidden">
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(0,255,65,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,65,0.04) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
-      />
+    <AuthPageShell>
+      
+      <div className="w-full max-w-md">
+        <div className="relative overflow-hidden rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-8 shadow-[0_0_40px_-10px_rgba(0,229,255,0.35)] backdrop-blur-xl md:p-10">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
 
-      {["top-5 left-5 border-t border-l","top-5 right-5 border-t border-r","bottom-5 left-5 border-b border-l","bottom-5 right-5 border-b border-r"].map((cls, i) => (
-        <div key={i} className={`absolute w-16 h-16 border-[rgba(0,255,65,0.25)] pointer-events-none ${cls}`} />
-      ))}
-
-      <div className="relative w-full max-w-md bg-[rgba(8,18,24,0.95)] border border-[rgba(0,255,65,0.2)] rounded-sm p-10 backdrop-blur-md z-10">
-        <div className="absolute top-0 left-0 right-0 h-[2px] rounded-t-sm bg-gradient-to-r from-transparent via-[#00ff41] to-transparent" />
-
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-9 h-9 bg-[rgba(0,255,65,0.08)] border border-[rgba(0,255,65,0.3)] rounded flex items-center justify-center text-[#00ff41]">
-            🛡
-          </div>
-          <span className="font-mono text-xl text-[#00ff41] tracking-widest uppercase">
-            Vuln<span className="opacity-50">Scanner</span>
-          </span>
-        </div>
-        <p className="font-mono text-[10px] text-[rgba(0,255,65,0.4)] tracking-[3px] uppercase mb-7 ml-12">
-          Create Operator Profile
-        </p>
-
-        {errors.general && (
-          <div className="mb-4 px-3 py-2 bg-[rgba(255,60,60,0.08)] border border-[rgba(255,60,60,0.3)] rounded-sm font-mono text-[11px] text-[rgba(255,100,100,0.9)] tracking-wider">
-            ⚠ {errors.general}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} noValidate className="space-y-4">
-          {/* Name */}
-          <div>
-            <label className="block font-mono text-[11px] text-[rgba(0,255,65,0.5)] tracking-[2px] uppercase mb-1.5">
-              Full Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => { setName(e.target.value); setErrors(p => ({ ...p, name: undefined })); }}
-              placeholder="John Doe"
-              className={`w-full h-11 px-4 bg-[rgba(0,255,65,0.03)] border rounded-sm font-mono text-[13px] text-[#c8ffc8] placeholder-[rgba(0,255,65,0.18)] outline-none transition-all
-                ${errors.name ? "border-[rgba(255,60,60,0.5)]" : "border-[rgba(0,255,65,0.15)] focus:border-[rgba(0,255,65,0.5)]"}`}
-            />
-            {errors.name && <p className="mt-1 font-mono text-[10px] text-[rgba(255,80,80,0.8)]">{errors.name}</p>}
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 shadow-lg shadow-cyan-500/30">
+              <Shield className="h-6 w-6 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-white md:text-3xl">
+              Create your account
+            </h1>
+            <p className="mt-2 text-sm text-gray-400">
+              Start scanning with{" "}
+              <span className="text-cyan-400">VulnScanner</span> in minutes.
+            </p>
           </div>
 
-          {/* Email */}
-          <div>
-            <label className="block font-mono text-[11px] text-[rgba(0,255,65,0.5)] tracking-[2px] uppercase mb-1.5">
-              Email
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgba(0,255,65,0.35)] text-sm">@</span>
-              <input
+          {errors.general && (
+            <div
+              role="alert"
+              className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+            >
+              {errors.general}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} noValidate className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-gray-300">
+                Full name
+              </Label>
+              <Input
+                id="name"
+                autoComplete="name"
+                placeholder="Jordan Lee"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setErrors((p) => {
+                    const { name: _n, ...rest } = p;
+                    return rest;
+                  });
+                }}
+                className={inputClass}
+                aria-invalid={!!errors.name}
+              />
+              {errors.name && (
+                <p className="text-xs text-red-400">{errors.name}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="reg-email" className="text-gray-300">
+                Email
+              </Label>
+              <Input
+                id="reg-email"
                 type="email"
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); setErrors(p => ({ ...p, email: undefined })); }}
-                placeholder="you@domain.com"
                 autoComplete="email"
-                className={`w-full h-11 pl-8 pr-4 bg-[rgba(0,255,65,0.03)] border rounded-sm font-mono text-[13px] text-[#c8ffc8] placeholder-[rgba(0,255,65,0.18)] outline-none transition-all
-                  ${errors.email ? "border-[rgba(255,60,60,0.5)]" : "border-[rgba(0,255,65,0.15)] focus:border-[rgba(0,255,65,0.5)]"}`}
+                placeholder="you@company.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setErrors((p) => {
+                    const { email: _e, ...rest } = p;
+                    return rest;
+                  });
+                }}
+                className={inputClass}
+                aria-invalid={!!errors.email}
               />
+              {errors.email && (
+                <p className="text-xs text-red-400">{errors.email}</p>
+              )}
             </div>
-            {errors.email && <p className="mt-1 font-mono text-[10px] text-[rgba(255,80,80,0.8)]">{errors.email}</p>}
-          </div>
 
-          {/* Password */}
-          <div>
-            <label className="block font-mono text-[11px] text-[rgba(0,255,65,0.5)] tracking-[2px] uppercase mb-1.5">
-              Access Key
-            </label>
-            <p className="text-[9px] text-[rgba(0,255,65,0.3)] mb-2">Min 8 chars: uppercase, lowercase, number, !@#$%^&*</p>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgba(0,255,65,0.35)] text-sm">🔒</span>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="reg-password" className="text-gray-300">
+                Password
+              </Label>
+              <p className="text-xs text-gray-500">
+                8+ characters, upper & lower case, number, and{" "}
+                <span className="font-mono text-gray-400">!@#$%^&*</span>
+              </p>
+              <div className="relative">
+                <Input
+                  id="reg-password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setErrors((p) => {
+                      const { password: _p, ...rest } = p;
+                      return rest;
+                    });
+                  }}
+                  className={`${inputClass} pr-11`}
+                  aria-invalid={!!errors.password}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-500 transition-colors hover:bg-cyan-500/10 hover:text-cyan-400"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-xs text-red-400">{errors.password}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirm" className="text-gray-300">
+                Confirm password
+              </Label>
+              <Input
+                id="confirm"
                 type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); setErrors(p => ({ ...p, password: undefined })); }}
-                placeholder="••••••••••••"
                 autoComplete="new-password"
-                className={`w-full h-11 pl-8 pr-10 bg-[rgba(0,255,65,0.03)] border rounded-sm font-mono text-[13px] text-[#c8ffc8] placeholder-[rgba(0,255,65,0.18)] outline-none transition-all
-                  ${errors.password ? "border-[rgba(255,60,60,0.5)]" : "border-[rgba(0,255,65,0.15)] focus:border-[rgba(0,255,65,0.5)]"}`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgba(0,255,65,0.35)] hover:text-[rgba(0,255,65,0.7)] text-sm"
-              >
-                {showPassword ? "🙈" : "👁"}
-              </button>
-            </div>
-            {errors.password && <p className="mt-1 font-mono text-[10px] text-[rgba(255,80,80,0.8)]">{errors.password}</p>}
-          </div>
-
-          {/* Confirm Password */}
-          <div>
-            <label className="block font-mono text-[11px] text-[rgba(0,255,65,0.5)] tracking-[2px] uppercase mb-1.5">
-              Confirm Access Key
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgba(0,255,65,0.35)] text-sm">🔒</span>
-              <input
-                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
                 value={confirmPassword}
-                onChange={(e) => { setConfirmPassword(e.target.value); setErrors(p => ({ ...p, confirmPassword: undefined })); }}
-                placeholder="••••••••••••"
-                autoComplete="new-password"
-                className={`w-full h-11 pl-8 pr-4 bg-[rgba(0,255,65,0.03)] border rounded-sm font-mono text-[13px] text-[#c8ffc8] placeholder-[rgba(0,255,65,0.18)] outline-none transition-all
-                  ${errors.confirmPassword ? "border-[rgba(255,60,60,0.5)]" : "border-[rgba(0,255,65,0.15)] focus:border-[rgba(0,255,65,0.5)]"}`}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  setErrors((p) => {
+                    const { confirmPassword: _c, ...rest } = p;
+                    return rest;
+                  });
+                }}
+                className={inputClass}
+                aria-invalid={!!errors.confirmPassword}
               />
+              {errors.confirmPassword && (
+                <p className="text-xs text-red-400">{errors.confirmPassword}</p>
+              )}
             </div>
-            {errors.confirmPassword && <p className="mt-1 font-mono text-[10px] text-[rgba(255,80,80,0.8)]">{errors.confirmPassword}</p>}
-          </div>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full h-12 mt-6 bg-[rgba(0,255,65,0.08)] hover:bg-[rgba(0,255,65,0.14)] border border-[rgba(0,255,65,0.35)] hover:border-[rgba(0,255,65,0.65)] rounded-sm text-[#00ff41] font-mono text-sm tracking-[3px] uppercase transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Creating Account...
-              </>
-            ) : (
-              "▶ Create Account"
-            )}
-          </button>
-        </form>
+            <AnimatedButton
+              type="submit"
+              loading={isLoading}
+              size="lg"
+              variant="primary"
+              glowing
+              className="mt-2 w-full"
+            >
+              Create account
+            </AnimatedButton>
+          </form>
 
-        <div className="mt-5 pt-5 border-t border-[rgba(0,255,65,0.07)] text-center">
-          <span className="text-xs text-[rgba(150,200,150,0.45)]">Have account? </span>
-          <Link href="/auth/login" className="font-mono text-xs text-[rgba(0,255,65,0.55)] hover:text-[#00ff41] transition-colors tracking-wider">
-            Login →
-          </Link>
+          <p className="mt-8 border-t border-cyan-500/10 pt-6 text-center text-sm text-gray-500">
+            Already registered?{" "}
+            <Link
+              href="/auth/login"
+              className="font-semibold text-cyan-400 transition-colors hover:text-cyan-300"
+            >
+              Sign in
+            </Link>
+          </p>
         </div>
       </div>
-    </main>
+    </AuthPageShell>
   );
 }

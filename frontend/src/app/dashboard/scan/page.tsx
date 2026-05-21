@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import Navbar from "@/components/Navbar";
 import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +33,7 @@ export default function ScanPage() {
     try {
       if (!url) return false;
       // Basic URL validation
-      // eslint-disable-next-line no-new
+       
       new URL(url);
       return true;
     } catch {
@@ -46,7 +47,7 @@ export default function ScanPage() {
     const target = params.get("url");
     if (!target) return;
     // Avoid cascading renders by scheduling state update
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+     
     queueMicrotask(() => setUrl(target));
   }, []);
 
@@ -68,7 +69,7 @@ export default function ScanPage() {
     ];
 
     for (const step of steps) {
-      // eslint-disable-next-line no-await-in-loop
+       
       await new Promise((r) => setTimeout(r, step.delayMs));
       setProgress(step.progress);
       setLogLines((prev) => [...prev, { severity: step.severity, text: step.text }]);
@@ -80,8 +81,9 @@ export default function ScanPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-background text-foreground px-4 py-10">
-        <div className="max-w-5xl mx-auto flex flex-col gap-6">
+      <div className="min-h-screen overflow-x-hidden bg-slate-950 text-foreground">
+        <Navbar />
+        <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-10">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div>
               <div className="inline-flex items-center gap-3">
@@ -106,7 +108,7 @@ export default function ScanPage() {
             </div>
           </div>
 
-          <Card className="bg-card border-border">
+          <Card className="border-cyan-500/20 bg-slate-900/50 shadow-lg shadow-cyan-500/5">
             <CardContent className="p-6">
               <div className="flex flex-col gap-4">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
@@ -144,7 +146,7 @@ export default function ScanPage() {
           </Card>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="bg-card border-border">
+            <Card className="border-cyan-500/20 bg-slate-900/50 shadow-lg shadow-cyan-500/5">
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <h2 className="font-semibold">Live Scan Output</h2>
@@ -171,7 +173,7 @@ export default function ScanPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-card border-border">
+            <Card className="border-cyan-500/20 bg-slate-900/50 shadow-lg shadow-cyan-500/5">
               <CardContent className="p-6">
                 <h2 className="font-semibold mb-2">Report</h2>
                 <p className="text-sm text-muted-foreground mb-4">

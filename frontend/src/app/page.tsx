@@ -4,37 +4,66 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  Shield, Zap, Database, Code, Lock, Globe, Search,
-  FileText, ChevronRight, CheckCircle,
-
-  AlertTriangle, XCircle, Info
+  Shield,
+  Zap,
+  ChevronRight,
+  CheckCircle2,
+  ArrowRight,
+  AlertTriangle,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
+import { GlassmorphicCard } from "@/components/ui/GlassmorphicCard";
+import { GradientText } from "@/components/ui/GradientText";
+import { ParticleBackground } from "@/components/ui/ParticleBackground";
+import { AnimatedButton } from "@/components/ui/AnimatedButton";
+import { GlowingBadge } from "@/components/ui/GlowingBadge";
+import { FeatureModal } from "@/components/ui/FeatureModal";
+import { FEATURES } from "@/lib/constants";
+import {
+  fadeUp,
+  fadeInScale,
+  containerVariants,
+  itemVariants,
+  floatingAnimation,
+} from "@/lib/animations";
 
-const features = [
-  { icon: Database, label: "SQL injection", desc: "Detect all SQLi variants including blind and time-based", color: "text-red-400", bg: "bg-red-500/10" },
-  { icon: Code, label: "XSS scanner", desc: "Reflected, stored, and DOM-based XSS detection", color: "text-orange-400", bg: "bg-orange-500/10" },
-  { icon: Lock, label: "SSL/TLS checker", desc: "Certificate validity, cipher suite and protocol checks", color: "text-blue-400", bg: "bg-blue-500/10" },
-  { icon: Shield, label: "Security headers", desc: "CSP, HSTS, X-Frame-Options and 12 more headers", color: "text-green-400", bg: "bg-green-500/10" },
-  { icon: Globe, label: "CORS scanner", desc: "Detect dangerous cross-origin policy misconfigurations", color: "text-purple-400", bg: "bg-purple-500/10" },
-  { icon: Search, label: "Subdomain finder", desc: "Enumerate all subdomains and check their security", color: "text-yellow-400", bg: "bg-yellow-500/10" },
-  { icon: FileText, label: "PDF reports", desc: "Download full vulnerability reports in PDF format", color: "text-cyan-400", bg: "bg-cyan-500/10" },
-  { icon: Zap, label: "AI fix suggestions", desc: "GPT-powered remediation for every vulnerability found", color: "text-pink-400", bg: "bg-pink-500/10" },
+const stats = [
+  { num: "30+", label: "Detection Modules" },
+  { num: "OWASP", label: "Top 10 Coverage" },
+  { num: "AI", label: "Powered Fixes" },
+  { num: "Free", label: "No Credit Card" },
 ];
 
 const terminalLines = [
   { time: "00:01", type: "info", text: "Starting scan → target: example.com" },
-  { time: "00:02", type: "success", text: "SSL certificate valid · expires 2026-08-10" },
-  { time: "00:04", type: "warning", text: "Missing header: Content-Security-Policy" },
+  {
+    time: "00:02",
+    type: "success",
+    text: "SSL certificate valid · expires 2026-08-10",
+  },
+  {
+    time: "00:04",
+    type: "warning",
+    text: "Missing header: Content-Security-Policy",
+  },
   { time: "00:06", type: "warning", text: "Missing header: X-Frame-Options" },
-  { time: "00:08", type: "critical", text: "SQL injection found → /login?id=1'" },
-  { time: "00:10", type: "high", text: "Reflected XSS → /search?q=<script>" },
+  {
+    time: "00:08",
+    type: "critical",
+    text: "SQL injection found → /login?id=1'",
+  },
+  {
+    time: "00:10",
+    type: "high",
+    text: "Reflected XSS → /search?q=<script>",
+  },
   { time: "00:12", type: "success", text: "No open redirects detected" },
-  { time: "00:14", type: "info", text: "Generating AI fix suggestions..." },
+  {
+    time: "00:14",
+    type: "info",
+    text: "Generating AI fix suggestions...",
+  },
 ];
 
 const typeColors: Record<string, string> = {
@@ -46,258 +75,371 @@ const typeColors: Record<string, string> = {
 };
 
 const typeIcons: Record<string, React.ReactNode> = {
-  info: <Info className="h-3 w-3" />,
-  success: <CheckCircle className="h-3 w-3" />,
+  info: <AlertTriangle className="h-3 w-3" />,
+  success: <CheckCircle2 className="h-3 w-3" />,
   warning: <AlertTriangle className="h-3 w-3" />,
-  critical: <XCircle className="h-3 w-3" />,
+  critical: <AlertTriangle className="h-3 w-3" />,
   high: <AlertTriangle className="h-3 w-3" />,
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.08, duration: 0.4, ease: "easeOut" },
-  }),
 };
 
 export default function LandingPage() {
   const [url, setUrl] = useState("");
+  const [selectedFeature, setSelectedFeature] = useState<typeof FEATURES[0] | null>(null);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-slate-950 text-foreground overflow-hidden">
       <Navbar />
 
-      {/* ── HERO ─────────────────────────────────────────── */}
-      <section className="relative overflow-hidden py-24 px-4">
-        {/* Background grid pattern */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage:
-              "linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
+      {/* ──────────────────────────────────── HERO ──────────────────────────────────── */}
+      <section className="relative min-h-screen flex items-center justify-center py-24 px-4 overflow-hidden">
+        {/* Animated background particles */}
+        <ParticleBackground particleCount={25} className="opacity-60" />
+
+        {/* Animated grid background */}
+        <div className="absolute inset-0 opacity-5">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                "linear-gradient(0deg, rgba(0, 229, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 229, 255, 0.1) 1px, transparent 1px)",
+              backgroundSize: "50px 50px",
+            }}
+          />
+        </div>
+
+        {/* Glow orbs */}
+        <motion.div
+          className="absolute top-20 left-10 w-80 h-80 bg-cyan-500 rounded-full opacity-20 blur-3xl"
+          animate={{
+            y: [0, 50, 0],
+            x: [0, 30, 0],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute bottom-20 right-10 w-80 h-80 bg-blue-500 rounded-full opacity-20 blur-3xl"
+          animate={{
+            y: [0, -50, 0],
+            x: [0, -30, 0],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
           }}
         />
 
-        <div className="container mx-auto max-w-4xl text-center relative z-10">
+        <div className="container mx-auto max-w-5xl relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: -12 }}
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-8"
           >
-            <Badge
-              variant="outline"
-              className="mb-6 border-primary/30 bg-primary/5 text-primary px-4 py-1.5 text-sm"
-            >
-              <Zap className="mr-2 h-3.5 w-3.5" />
-              OWASP Top 10 · 30+ scanner modules · AI-powered fixes
-            </Badge>
+            <GlowingBadge variant="primary" size="md">
+              <Zap className="h-4 w-4" />
+              <span>Enterprise Security for Developers</span>
+            </GlowingBadge>
           </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-            className="text-5xl md:text-6xl font-bold tracking-tight mb-6 leading-tight"
-          >
-            Find vulnerabilities{" "}
-            <span className="text-primary">before attackers do</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed"
-          >
-            Enterprise-grade web security scanning with AI-powered fix
-            recommendations. Detect SQL injection, XSS, CSRF, misconfigurations
-            and more — completely free.
-          </motion.p>
-
-          {/* Scan input */}
+          {/* Main heading */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto mb-8"
+            transition={{ delay: 0.1, duration: 0.6 }}
+            className="mb-8 flex w-full justify-center px-2 sm:px-4"
           >
-            <Input
+            <div className="w-full max-w-4xl text-center">
+              <h1 className="text-balance text-4xl font-bold leading-[1.08] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
+                <span className="block">Find vulnerabilities</span>
+                <span className="mt-2 block sm:mt-3">
+                  <GradientText animated className="inline-block font-bold">
+                    before attackers do
+                  </GradientText>
+                </span>
+              </h1>
+
+              <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-gray-400 sm:text-lg md:text-xl md:leading-relaxed">
+                Enterprise-grade web security scanning with AI-powered fix
+                recommendations. Detect SQL injection, XSS, CSRF, and more —
+                completely free.
+              </p>
+            </div>
+          </motion.div>
+
+          {/* CTA Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
+          >
+            <Link
+              href={
+                url
+                  ? `/dashboard/scan?url=${encodeURIComponent(url)}`
+                  : "/auth/register"
+              }
+            >
+              <AnimatedButton
+                size="lg"
+                variant="primary"
+                glowing
+                className="whitespace-nowrap"
+              >
+                <Shield className="h-5 w-5" />
+                Start Free Scan
+              </AnimatedButton>
+            </Link>
+
+            <Link href="/#features">
+              <AnimatedButton
+                size="lg"
+                variant="outline"
+                className="whitespace-nowrap"
+              >
+                <ArrowRight className="h-5 w-5" />
+                Explore Features
+              </AnimatedButton>
+            </Link>
+          </motion.div>
+
+          {/* URL Input */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto mb-6"
+          >
+            <input
               type="url"
               placeholder="https://yourwebsite.com"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="h-12 bg-card border-border text-base"
+              className="flex-1 px-6 py-3 bg-slate-900/50 border border-cyan-500/20 rounded-lg text-white placeholder-gray-500 hover:border-cyan-500/40 focus:outline-none focus:border-cyan-500/60 transition-colors"
             />
-            <Link href={url ? `/dashboard/scan?url=${encodeURIComponent(url)}` : "/auth/register"}>
-              <Button
-                size="lg"
-                className="h-12 px-8 bg-primary text-primary-foreground hover:bg-primary/90 whitespace-nowrap w-full sm:w-auto"
-              >
-                <Shield className="mr-2 h-4 w-4" />
-                Scan now — free
-              </Button>
-            </Link>
           </motion.div>
 
+          {/* Disclaimer */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.45 }}
-            className="text-xs text-muted-foreground"
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="text-sm text-gray-500 text-center"
           >
-            No credit card required · Only scan sites you own or have permission to test
+            No credit card required · Only scan sites you own or have permission
+            to test
           </motion.p>
         </div>
       </section>
 
-      {/* ── STATS BAR ────────────────────────────────────── */}
-      <section className="border-y border-border bg-card/50">
+      {/* ──────────────────────────────────── STATS ──────────────────────────────────── */}
+      <section className="relative py-16 border-y border-cyan-500/10 bg-slate-900/30 backdrop-blur-xl">
         <div className="container mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border">
-            {[
-              { num: "30+", label: "Scanner modules" },
-              { num: "OWASP", label: "Top 10 coverage" },
-              { num: "AI", label: "Fix suggestions" },
-              { num: "Free", label: "No credit card" },
-            ].map((stat, i) => (
-              <div key={i} className="py-6 px-8 text-center">
-                <div className="text-2xl font-bold text-primary">{stat.num}</div>
-                <div className="text-sm text-muted-foreground mt-1">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FEATURES ─────────────────────────────────────── */}
-      <section id="features" className="py-24 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">
-              Comprehensive vulnerability coverage
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Every scan checks across all OWASP Top 10 categories and beyond.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {features.map((f, i) => (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-0">
+            {stats.map((stat, i) => (
               <motion.div
-                key={f.label}
-                custom={i}
-                initial="hidden"
-                whileInView="visible"
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                variants={fadeUp}
+                transition={{ delay: i * 0.1 }}
+                className="py-6 px-4 md:px-8 text-center border-r border-cyan-500/10 last:border-r-0"
               >
-                <Card className="h-full bg-card border-border hover:border-primary/40 transition-colors group cursor-default">
-                  <CardContent className="p-6">
-                    <div className={`inline-flex p-2.5 rounded-lg ${f.bg} mb-4 group-hover:scale-110 transition-transform`}>
-                      <f.icon className={`h-5 w-5 ${f.color}`} />
-                    </div>
-                    <h3 className="font-semibold mb-2">{f.label}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
-                  </CardContent>
-                </Card>
+                <div className="text-2xl md:text-3xl font-bold text-cyan-400">
+                  {stat.num}
+                </div>
+                <div className="text-xs md:text-sm text-gray-400 mt-2">
+                  {stat.label}
+                </div>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── LIVE TERMINAL ─────────────────────────────────── */}
-      <section id="how-it-works" className="py-24 px-4 bg-card/30">
+      {/* ──────────────────────────────────── FEATURES ──────────────────────────────────── */}
+      <section id="features" className="relative scroll-mt-28 py-32 px-4">
+        <div className="container mx-auto max-w-6xl">
+          {/* Section header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-20"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Comprehensive<br />
+              <span className="text-cyan-400">vulnerability coverage</span>
+            </h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Every scan checks across all OWASP Top 10 categories and beyond.
+              Get detailed results with AI-powered remediation guidance.
+            </p>
+          </motion.div>
+
+          {/* Features grid */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          >
+            {FEATURES.map((feature, i) => (
+              <motion.div
+                key={feature.id}
+                id={`feature-${feature.id}`}
+                variants={itemVariants}
+                whileHover={{ y: -5 }}
+                className="scroll-mt-32"
+              >
+                <GlassmorphicCard
+                  hoverable
+                  glowing
+                  delay={i * 0.05}
+                  className="h-full p-6 cursor-pointer group"
+                  onClick={() => setSelectedFeature(feature)}
+                >
+                  <div
+                    className={`inline-flex p-3 rounded-lg ${feature.bgColor} mb-4 group-hover:scale-110 transition-transform`}
+                  >
+                    <feature.icon className={`h-6 w-6 ${feature.color}`} />
+                  </div>
+
+                  <h3 className="font-bold text-lg mb-2">{feature.label}</h3>
+                  <p className="text-gray-400 text-sm mb-4 leading-relaxed">
+                    {feature.shortDesc}
+                  </p>
+
+                  <motion.button
+                    whileHover={{ x: 5 }}
+                    className="text-cyan-400 hover:text-cyan-300 text-sm font-semibold flex items-center gap-2 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedFeature(feature);
+                    }}
+                  >
+                    Learn more <ChevronRight className="h-4 w-4" />
+                  </motion.button>
+                </GlassmorphicCard>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ──────────────────────────────────── LIVE TERMINAL ──────────────────────────────────── */}
+      <section id="how-it-works" className="relative scroll-mt-28 py-32 px-4 bg-slate-900/30">
         <div className="container mx-auto max-w-4xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Watch it work in real time</h2>
-            <p className="text-muted-foreground text-lg">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Watch it work in<br />
+              <span className="text-cyan-400">real time</span>
+            </h2>
+            <p className="text-gray-400 text-lg">
               Every scan streams live results directly to your browser.
             </p>
-          </div>
+          </motion.div>
 
-          <Card className="bg-zinc-950 border-zinc-800 overflow-hidden">
-            {/* Terminal header bar */}
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800 bg-zinc-900">
+          {/* Terminal */}
+          <GlassmorphicCard hoverable={false} glowing className="overflow-hidden">
+            {/* Terminal header */}
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-cyan-500/10 bg-slate-950/50">
               <div className="h-3 w-3 rounded-full bg-red-500/70" />
               <div className="h-3 w-3 rounded-full bg-yellow-500/70" />
               <div className="h-3 w-3 rounded-full bg-green-500/70" />
-              <span className="ml-3 text-xs text-zinc-500 font-mono">
+              <span className="ml-3 text-xs text-gray-500 font-mono">
                 vulnscanner — scan: example.com
               </span>
             </div>
 
-            <CardContent className="p-6 font-mono text-sm space-y-2">
+            {/* Terminal content */}
+            <div className="p-6 font-mono text-sm space-y-2">
               {terminalLines.map((line, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, x: -8 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.15 }}
+                  transition={{ delay: i * 0.1 }}
                   className="flex items-center gap-3"
                 >
-                  <span className="text-zinc-600 text-xs w-12 shrink-0">[{line.time}]</span>
+                  <span className="text-gray-600 text-xs w-12 shrink-0">
+                    [{line.time}]
+                  </span>
                   <span className={`shrink-0 ${typeColors[line.type]}`}>
                     {typeIcons[line.type]}
                   </span>
                   <span className={typeColors[line.type]}>{line.text}</span>
                 </motion.div>
               ))}
+
               {/* Blinking cursor */}
               <div className="flex items-center gap-3 pt-1">
-                <span className="text-zinc-600 text-xs w-12 shrink-0">[00:15]</span>
-                <span className="inline-block w-2 h-4 bg-primary animate-pulse" />
+                <span className="text-gray-600 text-xs w-12 shrink-0">
+                  [00:15]
+                </span>
+                <span className="inline-block w-2 h-4 bg-cyan-400 animate-pulse" />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </GlassmorphicCard>
         </div>
       </section>
 
-      {/* ── CTA ───────────────────────────────────────────── */}
-      <section className="py-24 px-4">
-        <div className="container mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Ready to secure your application?
-          </h2>
-          <p className="text-muted-foreground text-lg mb-8">
-            Join thousands of developers scanning their apps with VulnScanner.
-            No credit card. No limits on free tier.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth/register">
-              <Button size="lg" className="px-10 bg-primary text-primary-foreground hover:bg-primary/90">
-                Get started free
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/auth/login">
-              <Button size="lg" variant="outline" className="px-10">
-                Log in
-              </Button>
-            </Link>
-          </div>
+      {/* ──────────────────────────────────── CTA ──────────────────────────────────── */}
+      <section className="relative py-32 px-4">
+        <div className="container mx-auto max-w-3xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Ready to secure<br />
+              <span className="text-cyan-400">your application?</span>
+            </h2>
+
+            <p className="text-gray-400 text-lg mb-12 max-w-2xl mx-auto">
+              Join thousands of developers scanning their apps with VulnScanner.
+              No credit card. No limits on free tier.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/auth/register">
+                <AnimatedButton size="lg" variant="primary" glowing>
+                  Get started free
+                  <ChevronRight className="h-5 w-5" />
+                </AnimatedButton>
+              </Link>
+              <Link href="/auth/login">
+                <AnimatedButton size="lg" variant="outline">
+                  Already have an account?
+                </AnimatedButton>
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ── FOOTER ────────────────────────────────────────── */}
-      <footer className="border-t border-border py-10 px-4">
-        <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-primary" />
-            <span>VulnScanner · Open source security tool</span>
-          </div>
-          <div className="flex gap-6">
-            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-            <Link href="/docs" className="hover:text-foreground transition-colors">Docs</Link>
-            <a href="https://github.com" className="hover:text-foreground transition-colors">GitHub</a>
-          </div>
-        </div>
-      </footer>
+      {/* Feature Modal */}
+      <FeatureModal
+        feature={selectedFeature}
+        onClose={() => setSelectedFeature(null)}
+      />
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
