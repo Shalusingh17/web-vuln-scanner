@@ -580,6 +580,124 @@ app.get("/", (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────
+// Container Security Routes
+// ─────────────────────────────────────────────────────
+app.post("/api/scan/dockerfile", authMiddleware, [
+  body("dockerfile").isString().notEmpty(),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return jsonError(res, "Invalid input", 400, errors.array());
+    }
+
+    const { dockerfile } = req.body;
+    const lines = dockerfile.split('\n').map(l => l.trim()).filter(Boolean);
+    const findings = [];
+    let grade = 'A';
+
+    let hasUser = false;
+    let fromLine = null;
+    let hasAdd = false;
+    let hasSecrets = false;
+    let hasExpose22 = false;
+
+    for (const line of lines) {
+      if (line.toUpperCase().startsWith("USER ")) hasUser = true;
+      if (line.toUpperCase().startsWith("FROM ")) fromLine = line;
+      if (line.toUpperCase().startsWith("ADD ")) hasAdd = true;
+      if (line.toUpperCase().startsWith("EXPOSE 22")) hasExpose22 = true;
+
+      if (line.toUpperCase().startsWith("ENV ") || line.toUpperCase().startsWith("ARG ")) {
+        const upperLine = line.toUpperCase();
+        if (upperLine.includes("PASSWORD") || upperLine.includes("SECRET") || upperLine.includes("TOKEN") || upperLine.includes("KEY")) {
+          hasSecrets = true;
+        }
+      }
+    }
+
+    if (!hasUser) {
+      findings.push({
+        type: "root_privilege",
+        severity: "critical",
+        message: "No USER directive specified. Container runs as root by default.",
+        recommendation: "Add 'USER <non-root-user>' (e.g., 'USER node') before executing your application."
+      });
+    }
+
+    if (fromLine) {
+      if (fromLine.endsWith(":latest") || !fromLine.includes(":")) {
+        findings.push({
+          type: "unpinned_tag",
+          severity: "high",
+          message: "Base image uses 'latest' or has no tag pinned.",
+          recommendation: "Pin a specific version (e.g., node:18.17.0) to prevent unpredictable breaking changes."
+        });
+      }
+      if (!fromLine.includes("alpine") && !fromLine.includes("slim") && !fromLine.includes("distroless")) {
+        findings.push({
+          type: "bloated_image",
+          severity: "medium",
+          message: "Base image appears to be a full OS distribution.",
+          recommendation: "Consider switching to an alpine, slim, or distroless variant to reduce attack surface."
+        });
+      }
+    } else {
+      findings.push({
+        type: "missing_from",
+        severity: "critical",
+        message: "No FROM directive found.",
+        recommendation: "A valid Dockerfile must begin with a FROM instruction."
+      });
+    }
+
+    if (hasAdd) {
+      findings.push({
+        type: "insecure_directive",
+        severity: "low",
+        message: "Use of ADD directive detected.",
+        recommendation: "Prefer COPY over ADD unless you specifically need to extract a tarball or fetch a remote URL."
+      });
+    }
+
+    if (hasExpose22) {
+      findings.push({
+        type: "exposed_ssh",
+        severity: "high",
+        message: "Port 22 (SSH) is exposed.",
+        recommendation: "Never run an SSH daemon inside a container. Use 'docker exec' for debugging."
+      });
+    }
+
+    if (hasSecrets) {
+      findings.push({
+        type: "hardcoded_secrets",
+        severity: "critical",
+        message: "Potential secrets found in ENV or ARG directives.",
+        recommendation: "Never hardcode secrets in Dockerfiles. Pass them at runtime or use Docker Secrets / BuildKit."
+      });
+    }
+
+    const criticalCount = findings.filter(f => f.severity === 'critical').length;
+    const highCount = findings.filter(f => f.severity === 'high').length;
+
+    if (criticalCount > 0) grade = 'F';
+    else if (highCount > 0) grade = 'D';
+    else if (findings.length > 0) grade = 'B';
+
+    return res.status(200).json({
+      message: "Container scan completed",
+      grade,
+      findings
+    });
+
+  } catch (err) {
+    console.error("[Container Scan Error]", err.message);
+    return jsonError(res, "Scan failed", 500);
+  }
+});
+
+// ─────────────────────────────────────────────────────
 // Database connection
 // ─────────────────────────────────────────────────────
 async function start() {

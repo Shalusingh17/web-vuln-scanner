@@ -179,13 +179,20 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <Button
-              asChild
-              variant="outline"
-              className="border-cyan-500/30 bg-slate-900/40 text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200"
-            >
-              <Link href="/dashboard/scan">Open scan runner</Link>
-            </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="border-indigo-500/30 bg-slate-900/40 text-indigo-300 hover:bg-indigo-500/10 hover:text-indigo-200"
+              >
+                <Link href="/dashboard/container">Container Security</Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="border-cyan-500/30 bg-slate-900/40 text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200"
+              >
+                <Link href="/dashboard/scan">Open scan runner</Link>
+              </Button>
             <div className="hidden text-right sm:block md:mr-2">
               <p className="text-sm font-medium text-white">{user?.name}</p>
               <p className="max-w-[220px] truncate text-xs text-gray-500">
