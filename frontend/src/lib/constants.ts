@@ -283,6 +283,7 @@ export const TOOLS_DROPDOWN = [
   { label: "Port Scanner", href: "/docs#api" },
   { label: "Vulnerability Scanner", href: "/dashboard/scan" },
   { label: "Container Security", href: "/dashboard/container" },
+  { label: "Network Tools", href: "/dashboard/tools" },
   { label: "Subdomain Finder", href: "/#feature-subdomain-finder" },
   { label: "SSL Checker", href: "/#feature-ssl-checker" },
 ];

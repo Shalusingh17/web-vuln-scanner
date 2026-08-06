@@ -189,6 +189,13 @@ export default function DashboardPage() {
               <Button
                 asChild
                 variant="outline"
+                className="border-emerald-500/30 bg-slate-900/40 text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200"
+              >
+                <Link href="/dashboard/tools">Network Tools</Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
                 className="border-cyan-500/30 bg-slate-900/40 text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200"
               >
                 <Link href="/dashboard/scan">Open scan runner</Link>

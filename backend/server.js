@@ -9,6 +9,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 const axios = require("axios");
+const dns = require("dns");
+const net = require("net");
 
 const app = express();
 
@@ -694,6 +696,122 @@ app.post("/api/scan/dockerfile", authMiddleware, [
   } catch (err) {
     console.error("[Container Scan Error]", err.message);
     return jsonError(res, "Scan failed", 500);
+  }
+});
+
+// ─────────────────────────────────────────────────────
+// General Security Tools Routes
+// ─────────────────────────────────────────────────────
+
+app.post("/api/tools/dns", authMiddleware, [
+  body("target").isString().notEmpty().trim(),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return jsonError(res, "Invalid input", 400, errors.array());
+
+    let target = req.body.target;
+    // Strip http/https if accidentally provided
+    if (target.startsWith("http://") || target.startsWith("https://")) {
+      try {
+        const parsed = new URL(target);
+        target = parsed.hostname;
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    const records = [];
+    const recordTypes = ["A", "AAAA", "MX", "TXT", "NS"];
+    
+    // Resolve each record type
+    for (const type of recordTypes) {
+      try {
+        const resolved = await dns.promises.resolve(target, type);
+        resolved.forEach(value => {
+          let strVal = value;
+          if (typeof value === "object") {
+            // MX returns { priority, exchange }, TXT returns array of arrays
+            if (value.exchange) strVal = `[Priority: ${value.priority}] ${value.exchange}`;
+            else if (Array.isArray(value)) strVal = value.join(" ");
+            else strVal = JSON.stringify(value);
+          }
+          records.push({ type, value: strVal });
+        });
+      } catch (e) {
+        // Record type might not exist, ignore
+      }
+    }
+
+    return res.status(200).json({
+      message: "DNS lookup completed",
+      target,
+      records
+    });
+  } catch (err) {
+    console.error("[DNS Error]", err.message);
+    return jsonError(res, "DNS lookup failed", 500);
+  }
+});
+
+app.post("/api/tools/portscan", authMiddleware, [
+  body("target").isString().notEmpty().trim(),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return jsonError(res, "Invalid input", 400, errors.array());
+
+    let target = req.body.target;
+    if (target.startsWith("http://") || target.startsWith("https://")) {
+      try {
+        const parsed = new URL(target);
+        target = parsed.hostname;
+      } catch (e) { }
+    }
+
+    // Common ports to scan rapidly
+    const commonPorts = [21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 443, 445, 993, 995, 1723, 3306, 3389, 5900, 8080, 27017];
+    
+    const checkPort = (port, timeout = 1500) => {
+      return new Promise((resolve) => {
+        const socket = new net.Socket();
+        let status = 'closed';
+
+        socket.setTimeout(timeout);
+
+        socket.on('connect', () => {
+          status = 'open';
+          socket.destroy();
+        });
+
+        socket.on('timeout', () => {
+          socket.destroy();
+        });
+
+        socket.on('error', () => {
+          socket.destroy();
+        });
+
+        socket.on('close', () => {
+          resolve({ port, status });
+        });
+
+        socket.connect(port, target);
+      });
+    };
+
+    // Scan all ports concurrently (but we only have 20, so it's fine)
+    const scanPromises = commonPorts.map(port => checkPort(port));
+    const results = await Promise.all(scanPromises);
+
+    return res.status(200).json({
+      message: "Port scan completed",
+      target,
+      results
+    });
+  } catch (err) {
+    console.error("[PortScan Error]", err.message);
+    return jsonError(res, "Port scan failed", 500);
   }
 });
 
