@@ -39,7 +39,7 @@ const PRICING_PLANS = [
     highlighted: false,
     descriptionUsd: "Perfect for individuals getting started",
     descriptionInr: "Perfect for individuals getting started",
-    cta: "Get started",
+    cta: "Start with Free",
     features: [
       "2 scans per day",
       "1 URL depth",
@@ -53,7 +53,7 @@ const PRICING_PLANS = [
     highlighted: true,
     descriptionUsd: "For developers and small teams",
     descriptionInr: "For developers and small teams",
-    cta: "Start free trial",
+    cta: "Buy now",
     features: [
       "Unlimited scans",
       "10 URL depth",
@@ -67,7 +67,7 @@ const PRICING_PLANS = [
     highlighted: false,
     descriptionUsd: "For large teams and enterprises",
     descriptionInr: "For large teams and enterprises",
-    cta: "Contact sales",
+    cta: "Buy now",
     features: [
       "Unlimited scans",
       "Unlimited URL depth",
@@ -151,10 +151,7 @@ export default function PricingPage() {
       return;
     }
 
-    if (planId === "enterprise") {
-      router.push("/contact");
-      return;
-    }
+
 
     setLoadingPlan(planId);
     try {
@@ -228,7 +225,7 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-foreground overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground bg-grid-pattern overflow-hidden">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <Navbar />
 
@@ -263,8 +260,7 @@ export default function PricingPage() {
             transition={{ delay: 0.2, duration: 0.5 }}
             className="flex flex-col sm:flex-row gap-6 justify-center mt-12"
           >
-            {/* Currency toggle */}
-            <div className="flex items-center gap-3 bg-slate-900/50 border border-cyan-500/20 rounded-lg p-1">
+            <div className="flex items-center gap-3 bg-slate-950/60 border border-cyan-500/20 rounded-lg p-1 backdrop-blur-md">
               <button
                 onClick={() => setCurrency("USD")}
                 className={`px-4 py-2 rounded transition-all ${
@@ -287,8 +283,7 @@ export default function PricingPage() {
               </button>
             </div>
 
-            {/* Billing toggle */}
-            <div className="flex items-center gap-3 bg-slate-900/50 border border-cyan-500/20 rounded-lg p-1">
+            <div className="flex items-center gap-3 bg-slate-950/60 border border-cyan-500/20 rounded-lg p-1 backdrop-blur-md">
               <button
                 onClick={() => setBillingPeriod("monthly")}
                 className={`px-4 py-2 rounded transition-all ${
@@ -411,8 +406,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* ──────────────────────────────────── FEATURE COMPARISON ──────────────────────────────────── */}
-      <section className="relative py-32 px-4 bg-slate-900/30 border-y border-cyan-500/10">
+      <section className="relative py-32 px-4 bg-slate-950/40 border-y border-cyan-500/10 backdrop-blur-sm">
         <div className="container mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

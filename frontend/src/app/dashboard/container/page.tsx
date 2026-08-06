@@ -4,7 +4,7 @@ import { useState } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/lib/AuthContext";
-import { Button } from "@/components/ui/button";
+import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Box, Scan, AlertTriangle, CheckCircle, UploadCloud } from "lucide-react";
@@ -72,7 +72,7 @@ export default function ContainerScanPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen overflow-x-hidden bg-slate-950 text-foreground">
+      <div className="min-h-screen overflow-x-hidden bg-background text-foreground bg-grid-pattern">
         <Navbar />
         <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-10">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
@@ -91,25 +91,27 @@ export default function ContainerScanPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left Col - Editor */}
-            <Card className="border-indigo-500/20 bg-slate-900/50 shadow-lg shadow-indigo-500/5 h-full">
+            <Card className="glass border-indigo-500/20 shadow-lg shadow-indigo-500/5 transition-all duration-300 hover:border-indigo-500/50 h-full">
               <CardContent className="p-6 h-full flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-semibold flex items-center gap-2">
                     <UploadCloud className="h-4 w-4" /> Dockerfile
                   </h2>
-                  <Button
+                  <AnimatedButton
                     size="sm"
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                    variant="primary"
+                    glowing
+                    className="bg-indigo-600 hover:bg-indigo-700"
                     onClick={runScan}
                     disabled={isScanning}
                   >
                     <Scan className="mr-2 h-4 w-4" />
                     {isScanning ? "Scanning..." : "Audit Image"}
-                  </Button>
+                  </AnimatedButton>
                 </div>
 
                 <textarea
-                  className="w-full flex-1 min-h-[400px] p-4 bg-slate-950/80 border border-border rounded-md font-mono text-sm text-slate-300 resize-y focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full flex-1 min-h-[400px] p-4 bg-slate-950/70 border border-indigo-500/25 rounded-md font-mono text-sm text-slate-300 resize-y focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
                   value={dockerfile}
                   onChange={(e) => setDockerfile(e.target.value)}
                   placeholder="Paste your Dockerfile contents here..."
@@ -119,7 +121,7 @@ export default function ContainerScanPage() {
             </Card>
 
             {/* Right Col - Results */}
-            <Card className="border-indigo-500/20 bg-slate-900/50 shadow-lg shadow-indigo-500/5 h-full">
+            <Card className="glass border-indigo-500/20 shadow-lg shadow-indigo-500/5 transition-all duration-300 hover:border-indigo-500/50 h-full">
               <CardContent className="p-6 h-full flex flex-col">
                 <h2 className="font-semibold mb-4 flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4" /> Audit Results
@@ -132,8 +134,8 @@ export default function ContainerScanPage() {
                   </div>
                 ) : (
                   <div className="flex-1 overflow-auto pr-2 space-y-6">
-                    <div className="flex items-center gap-4 bg-slate-950 p-4 rounded-lg border border-border">
-                      <div className={`text-4xl font-black ${
+                    <div className="flex items-center gap-4 bg-slate-950/60 p-4 rounded-lg border border-border">
+                      <div className={`text-4xl font-black font-mono ${
                         grade === 'A' ? 'text-green-500' :
                         grade === 'B' ? 'text-blue-500' :
                         grade === 'D' ? 'text-yellow-500' :
@@ -161,7 +163,7 @@ export default function ContainerScanPage() {
                         findings.map((finding, idx) => {
                           const sb = severityBadge[finding.severity];
                           return (
-                            <div key={idx} className="bg-slate-950 p-4 rounded-lg border border-border space-y-2">
+                            <div key={idx} className="bg-slate-950/60 p-4 rounded-lg border border-border space-y-2 hover:cyber-border-glow transition-all">
                               <div className="flex items-start justify-between gap-2">
                                 <span className={`text-[10px] uppercase tracking-wider border px-2 py-0.5 rounded ${sb.className}`}>
                                   {sb.label}

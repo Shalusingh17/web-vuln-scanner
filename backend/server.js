@@ -70,7 +70,7 @@ const userSchema = new mongoose.Schema({
     trim: true,
     match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   },
-  passwordHash: { type: String, required: true },
+  passwordHash: { type: String, default: null },
   plan: { type: String, enum: ["free", "pro", "enterprise"], default: "free" },
   role: { type: String, enum: ["user", "admin"], default: "user" },
   createdAt: { type: Date, default: Date.now },
@@ -78,7 +78,7 @@ const userSchema = new mongoose.Schema({
 });
 
 const scanSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  userId: { type: String, required: true },
   url: { type: String, required: true, trim: true },
   status: { type: String, enum: ["pending", "running", "completed", "failed"], default: "pending" },
   riskScore: { type: Number, min: 0, max: 100, default: 0 },
@@ -922,7 +922,6 @@ app.post("/api/payment/create-order", authMiddleware, [
     const { plan } = req.body;
     let amount = 0;
     
-    // In INR, amount is in paise (multiply by 100)
     if (plan === "pro") amount = 4999 * 100;
     else if (plan === "enterprise") amount = 19999 * 100;
 
@@ -974,7 +973,7 @@ app.post("/api/payment/verify", authMiddleware, [
     }
 
     // Signature matches, update user plan
-    const user = await User.findById(req.user.userId);
+    const user = await User.findOne({ email: req.auth.email });
     if (!user) return jsonError(res, "User not found", 404);
 
     user.plan = plan;

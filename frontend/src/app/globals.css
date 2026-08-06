@@ -1,20 +1,20 @@
 @import "tailwindcss";
 @layer base {
      :root {
-        --background: 215 28% 7%;
+        --background: 220 50% 3%;
         --foreground: 210 40% 95%;
-        --card: 215 25% 10%;
+        --card: 220 40% 6%;
         --card-foreground: 210 40% 95%;
-        --popover: 215 25% 10%;
+        --popover: 220 40% 6%;
         --popover-foreground: 210 40% 95%;
         --primary: 185 100% 50%;
-        --primary-foreground: 215 28% 7%;
-        --secondary: 195 100% 50%;
+        --primary-foreground: 220 50% 3%;
+        --secondary: 220 30% 15%;
         --secondary-foreground: 210 40% 95%;
-        --muted: 215 20% 35%;
-        --muted-foreground: 215 20% 55%;
+        --muted: 220 20% 15%;
+        --muted-foreground: 215 20% 65%;
         --accent: 172 100% 50%;
-        --accent-foreground: 215 28% 7%;
+        --accent-foreground: 220 50% 3%;
         --destructive: 0 84% 60%;
         --destructive-foreground: 210 40% 98%;
         --border: 215 30% 20%;
@@ -264,4 +264,24 @@
 
 .gradient-cyber {
     background: linear-gradient(135deg, #00E5FF, #00FFD1, #00BFFF);
+}
+
+/* ──────────────────────────────────────────── */
+/* BACKGROUND PATTERNS                          */
+/* ──────────────────────────────────────────── */
+
+.bg-grid-pattern {
+    background-size: 40px 40px;
+    background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-position: center;
+}
+
+.bg-grid-pattern-cyan {
+    background-size: 40px 40px;
+    background-image: 
+        linear-gradient(to right, rgba(0, 229, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 229, 255, 0.05) 1px, transparent 1px);
+    background-position: center;
 }

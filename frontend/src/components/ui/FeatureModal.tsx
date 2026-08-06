@@ -5,12 +5,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle2 } from "lucide-react";
 import { Feature } from "@/lib/constants";
 
+import { useRouter } from "next/navigation";
+import { AnimatedButton } from "@/components/ui/AnimatedButton";
+
 interface FeatureModalProps {
   feature: Feature | null;
   onClose: () => void;
 }
 
 export function FeatureModal({ feature, onClose }: FeatureModalProps) {
+  const router = useRouter();
+
   if (!feature) return null;
 
   return (
@@ -28,7 +33,7 @@ export function FeatureModal({ feature, onClose }: FeatureModalProps) {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-2xl rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 border border-cyan-500/30 shadow-2xl shadow-cyan-500/20"
+            className="relative w-full max-w-2xl rounded-xl glass-lg cyber-border-glow shadow-2xl shadow-cyan-500/20"
           >
             {/* Close button */}
             <motion.button
@@ -48,8 +53,8 @@ export function FeatureModal({ feature, onClose }: FeatureModalProps) {
                   <feature.icon className={`w-8 h-8 ${feature.color}`} />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-3xl font-bold mb-2">{feature.title}</h2>
-                  <p className="text-cyan-400/80">{feature.fullDescription}</p>
+                  <h2 className="text-3xl font-bold mb-2 font-mono text-cyan-50 tracking-tight">{feature.title}</h2>
+                  <p className="text-cyan-300/80 leading-relaxed">{feature.fullDescription}</p>
                 </div>
               </div>
 
@@ -97,13 +102,17 @@ export function FeatureModal({ feature, onClose }: FeatureModalProps) {
               </div>
 
               {/* CTA */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
+              <AnimatedButton
+                onClick={() => {
+                  router.push("/dashboard");
+                  onClose();
+                }}
+                variant="outline"
+                glowing
+                className="w-full mt-4"
               >
                 Start Scanning for {feature.title}
-              </motion.button>
+              </AnimatedButton>
             </div>
           </motion.div>
         </motion.div>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/lib/AuthContext";
-import { Button } from "@/components/ui/button";
+import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -87,7 +87,7 @@ export default function NetworkToolsPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen overflow-x-hidden bg-slate-950 text-foreground">
+      <div className="min-h-screen overflow-x-hidden bg-background text-foreground bg-grid-pattern">
         <Navbar />
         <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-10">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
@@ -131,19 +131,19 @@ export default function NetworkToolsPage() {
 
           <div className="mt-4">
             {activeTab === "dns" && (
-              <Card className="border-cyan-500/20 bg-slate-900/50 shadow-lg shadow-cyan-500/5">
+              <Card className="glass border-cyan-500/20 shadow-lg shadow-cyan-500/5 transition-all duration-300 hover:border-cyan-500/50">
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row gap-3">
                     <Input
                       placeholder="example.com"
                       value={dnsTarget}
                       onChange={(e) => setDnsTarget(e.target.value)}
-                      className="bg-slate-950"
+                      className="bg-slate-950/70 border-cyan-500/25 text-white font-mono placeholder:text-gray-600 focus-visible:ring-cyan-500/50 h-11"
                       onKeyDown={(e) => e.key === "Enter" && runDnsLookup()}
                     />
-                    <Button onClick={runDnsLookup} disabled={isResolving} className="md:w-32 bg-cyan-600 hover:bg-cyan-700 text-white">
+                    <AnimatedButton onClick={runDnsLookup} disabled={isResolving} glowing variant="primary" className="md:w-32 h-11">
                       {isResolving ? <Search className="animate-pulse h-4 w-4" /> : "Resolve"}
-                    </Button>
+                    </AnimatedButton>
                   </div>
 
                   <div className="mt-8">
@@ -181,19 +181,19 @@ export default function NetworkToolsPage() {
             )}
 
             {activeTab === "portscan" && (
-              <Card className="border-cyan-500/20 bg-slate-900/50 shadow-lg shadow-cyan-500/5">
+              <Card className="glass border-cyan-500/20 shadow-lg shadow-cyan-500/5 transition-all duration-300 hover:border-cyan-500/50">
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row gap-3">
                     <Input
                       placeholder="IP address or domain"
                       value={portTarget}
                       onChange={(e) => setPortTarget(e.target.value)}
-                      className="bg-slate-950"
+                      className="bg-slate-950/70 border-cyan-500/25 text-white font-mono placeholder:text-gray-600 focus-visible:ring-cyan-500/50 h-11"
                       onKeyDown={(e) => e.key === "Enter" && runPortScan()}
                     />
-                    <Button onClick={runPortScan} disabled={isScanning} className="md:w-32 bg-cyan-600 hover:bg-cyan-700 text-white">
+                    <AnimatedButton onClick={runPortScan} disabled={isScanning} glowing variant="primary" className="md:w-32 h-11">
                       {isScanning ? <Search className="animate-pulse h-4 w-4" /> : "Scan Ports"}
-                    </Button>
+                    </AnimatedButton>
                   </div>
 
                   <div className="mt-8">
@@ -208,11 +208,11 @@ export default function NetworkToolsPage() {
                             key={i} 
                             className={`p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${
                               r.status === 'open' 
-                                ? 'border-red-500/30 bg-red-500/10' 
+                                ? 'border-red-500/30 bg-red-500/10 hover:cyber-border-glow' 
                                 : 'border-emerald-500/10 bg-emerald-500/5 opacity-50'
                             }`}
                           >
-                            <span className="font-mono text-lg font-bold">
+                            <span className={`font-mono text-lg font-bold ${r.status === 'open' ? 'text-red-400' : 'text-emerald-400'}`}>
                               {r.port}
                             </span>
                             <Badge variant="outline" className={r.status === 'open' ? 'text-red-400 border-red-500/30' : 'text-emerald-500 border-emerald-500/30'}>

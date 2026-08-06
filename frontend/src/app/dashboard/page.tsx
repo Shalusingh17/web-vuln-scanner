@@ -42,7 +42,7 @@ const severityColors: Record<Severity, string> = {
   critical: "text-red-400 bg-red-950/40 border-red-600/50",
 };
 
-const cardClass = "border-cyan-500/20 bg-slate-900/50 shadow-lg shadow-cyan-500/5";
+const cardClass = "glass border-cyan-500/20 shadow-lg shadow-cyan-500/5 transition-all duration-300 hover:border-cyan-500/50";
 
 export default function DashboardPage() {
   const { user, token, logout } = useAuth();
@@ -158,7 +158,7 @@ export default function DashboardPage() {
   const displayScan = selectedScan || currentScan;
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-slate-950 text-foreground">
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground bg-grid-pattern">
       <Navbar />
 
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-10">
@@ -236,7 +236,7 @@ export default function DashboardPage() {
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="https://example.com"
-                  className="h-11 border-cyan-500/25 bg-slate-950/50 text-white placeholder:text-gray-500"
+                  className="h-11 border-cyan-500/25 bg-slate-950/70 text-white placeholder:text-gray-600 font-mono"
                   disabled={isScanning}
                 />
               </div>
@@ -333,7 +333,7 @@ export default function DashboardPage() {
 
                 <div className="mt-6 border-t border-cyan-500/10 pt-6">
                   <p className="text-xs text-gray-500">Scanned URL</p>
-                  <p className="mt-1 break-all text-xs text-cyan-300">
+                  <p className="mt-1 break-all text-xs text-cyan-400 font-mono">
                     {displayScan.url}
                   </p>
                   <p className="mt-2 text-xs text-gray-600">
@@ -364,7 +364,7 @@ export default function DashboardPage() {
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <p className="mb-1 text-xs font-bold uppercase tracking-wider">
+                            <p className="mb-1 text-xs font-bold uppercase tracking-wider font-mono text-cyan-100">
                               {finding.type.replace(/_/g, " ")}
                             </p>
                             <p className="text-xs opacity-90">
@@ -408,14 +408,14 @@ export default function DashboardPage() {
                     type="button"
                     onClick={() => setSelectedScan(scan)}
                     className={`w-full rounded-lg border p-3 text-left transition-all ${
-                      selectedScan?._id === scan._id
-                        ? "border-cyan-500/50 bg-cyan-500/10"
-                        : "border-cyan-500/15 bg-slate-950/40 hover:border-cyan-500/35"
+                        selectedScan?._id === scan._id
+                          ? "border-cyan-500/50 bg-cyan-900/20 cyber-border-glow"
+                          : "border-cyan-500/20 bg-slate-950/60 hover:border-cyan-500/40"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-medium text-cyan-200">
+                        <p className="truncate text-xs font-medium text-cyan-300 font-mono">
                           {scan.url}
                         </p>
                         <p className="text-xs text-gray-500">

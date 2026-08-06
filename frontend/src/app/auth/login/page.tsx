@@ -108,11 +108,11 @@ function LoginForm() {
   return (
     <AuthPageShell>
       <div className="w-full max-w-md">
-        <div className="relative overflow-hidden rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-8 shadow-[0_0_40px_-10px_rgba(0,229,255,0.35)] backdrop-blur-xl md:p-10">
+        <div className="relative overflow-hidden rounded-2xl glass-lg p-8 cyber-border-glow md:p-10">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
 
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 shadow-lg shadow-cyan-500/30">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-950 to-emerald-950 border border-cyan-500/30 shadow-lg shadow-cyan-500/20">
               <Shield className="h-6 w-6 text-white" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-white md:text-3xl">
@@ -156,10 +156,10 @@ function LoginForm() {
 
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-slate-700" />
+              <span className="w-full border-t border-cyan-500/20" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-[#0f172a] px-2 text-slate-400">
+            <div className="relative flex justify-center text-xs uppercase font-mono tracking-wider">
+              <span className="bg-slate-900/80 px-2 text-cyan-500/70">
                 Or continue with
               </span>
             </div>

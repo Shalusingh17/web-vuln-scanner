@@ -105,7 +105,7 @@ export default function SCAPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen overflow-x-hidden bg-slate-950 text-foreground">
+      <div className="min-h-screen overflow-x-hidden bg-background text-foreground bg-grid-pattern">
         <Navbar />
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
@@ -126,7 +126,7 @@ export default function SCAPage() {
             
             {/* Input Section */}
             <div className="lg:col-span-1 flex flex-col gap-4">
-              <Card className="border-fuchsia-500/20 bg-slate-900/50 shadow-lg shadow-fuchsia-500/5 h-full flex flex-col">
+              <Card className="glass border-fuchsia-500/20 shadow-lg shadow-fuchsia-500/5 transition-all duration-300 hover:border-fuchsia-500/50 h-full flex flex-col">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between">
                   <CardTitle className="text-sm font-semibold text-gray-300">package.json</CardTitle>
                   <Button variant="ghost" size="sm" onClick={loadExample} className="text-xs text-fuchsia-400 hover:text-fuchsia-300 h-6 px-2">
@@ -136,14 +136,14 @@ export default function SCAPage() {
                 <CardContent className="flex-1 flex flex-col gap-4">
                   <Textarea
                     placeholder="Paste your package.json contents here..."
-                    className="flex-1 min-h-[300px] resize-none bg-slate-950 font-mono text-xs text-slate-300"
+                    className="flex-1 min-h-[300px] resize-none border-fuchsia-500/25 bg-slate-950/70 font-mono text-xs text-slate-300 placeholder:text-gray-600 focus-visible:ring-fuchsia-500/50"
                     value={packageJson}
                     onChange={(e) => setPackageJson(e.target.value)}
                   />
                   <Button 
                     onClick={handleScan} 
                     disabled={isScanning} 
-                    className="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white"
+                    className="w-full bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-500 hover:to-purple-500 text-white font-semibold shadow-lg shadow-fuchsia-500/25 transition-all"
                   >
                     {isScanning ? (
                       <span className="flex items-center gap-2">
@@ -161,7 +161,7 @@ export default function SCAPage() {
 
             {/* Results Section */}
             <div className="lg:col-span-2">
-              <Card className="border-fuchsia-500/20 bg-slate-900/50 shadow-lg shadow-fuchsia-500/5 min-h-[420px]">
+              <Card className="glass border-fuchsia-500/20 shadow-lg shadow-fuchsia-500/5 transition-all duration-300 hover:border-fuchsia-500/50 min-h-[420px]">
                 <CardContent className="p-6">
                   {!results && !isScanning && (
                     <div className="flex flex-col items-center justify-center h-full py-20 text-muted-foreground">
@@ -181,8 +181,8 @@ export default function SCAPage() {
                     <div className="space-y-6">
                       <div className="flex flex-wrap gap-4 items-center justify-between border-b border-border pb-4">
                         <div className="flex gap-4">
-                          <div className="text-center px-4 py-2 bg-slate-950 rounded-lg border border-border">
-                            <p className="text-xs text-muted-foreground mb-1">Scanned</p>
+                          <div className="text-center px-4 py-2 bg-slate-950/60 rounded-lg border border-border">
+                            <p className="text-xs text-muted-foreground mb-1 font-mono">Scanned</p>
                             <p className="text-xl font-bold text-slate-200">{results.scannedCount}</p>
                           </div>
                           <div className={`text-center px-4 py-2 rounded-lg border ${results.vulnerableCount > 0 ? 'bg-red-500/10 border-red-500/30' : 'bg-emerald-500/10 border-emerald-500/30'}`}>

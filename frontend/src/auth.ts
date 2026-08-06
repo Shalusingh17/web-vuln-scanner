@@ -65,27 +65,41 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
      * Fires after every successful OAuth sign-in.
      * Auto-creates a User record on first login; skips for credentials.
      */
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
+      console.log("[NextAuth DEBUG] signIn callback triggered for provider:", account?.provider);
+      console.log("[NextAuth DEBUG] User object:", JSON.stringify(user, null, 2));
+      console.log("[NextAuth DEBUG] Profile object:", JSON.stringify(profile, null, 2));
+
       if (account?.provider === "credentials") {
         return true; // Already validated in authorize()
       }
 
       try {
+        console.log("[NextAuth DEBUG] Connecting to DB with URI:", process.env.MONGODB_URI?.replace(/:([^:@]+)@/, ':***@'));
         await connectDB();
+        console.log("[NextAuth DEBUG] DB connected successfully");
 
-        if (!user.email) return false;
+        if (!user.email) {
+          console.error("[NextAuth DEBUG] FAILED: user.email is null or undefined");
+          return false;
+        }
 
+        console.log("[NextAuth DEBUG] Looking up user by email:", user.email);
         const existingUser = await User.findOne({
           email: user.email.toLowerCase().trim(),
         });
 
         if (!existingUser) {
+          console.log("[NextAuth DEBUG] Creating new user record...");
           await User.create({
             name: user.name,
             email: user.email.toLowerCase().trim(),
             image: user.image ?? null,
             provider: account?.provider, // "github" | "google"
           });
+          console.log("[NextAuth DEBUG] New user created successfully");
+        } else {
+          console.log("[NextAuth DEBUG] Existing user found");
         }
 
         return true;
