@@ -6,6 +6,18 @@ import bcrypt from "bcryptjs";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 import jwt from "jsonwebtoken";
+
+// DEBUG: Log Environment Variables to verify they are loaded in production
+console.log("=== NEXTAUTH RUNTIME ENV CHECK ===");
+console.log("AUTH_URL is defined:", !!process.env.AUTH_URL);
+console.log("AUTH_SECRET is defined:", !!process.env.AUTH_SECRET);
+console.log("AUTH_GOOGLE_ID is defined:", !!process.env.AUTH_GOOGLE_ID);
+console.log("AUTH_GOOGLE_SECRET is defined:", !!process.env.AUTH_GOOGLE_SECRET);
+console.log("AUTH_GITHUB_ID is defined:", !!process.env.AUTH_GITHUB_ID);
+console.log("AUTH_GITHUB_SECRET is defined:", !!process.env.AUTH_GITHUB_SECRET);
+console.log("If any of these are false, check Vercel Environment Variables (must match these exact names)!");
+console.log("==================================");
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     GitHub({
@@ -175,4 +187,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   secret: process.env.AUTH_SECRET,
   trustHost: true,
+  debug: true, // Added for debugging deployed issues
 });
