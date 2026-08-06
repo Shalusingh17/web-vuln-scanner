@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Shield, Scan, AlertTriangle, CheckCircle, Download, LogOut } from "lucide-react";
 import Link from "next/link";
+import { generateVaptReport, ScanResult } from "@/lib/generatePdf";
+import { toast } from "sonner";
 
 type Severity = "info" | "success" | "warning" | "high" | "critical";
 
@@ -23,11 +25,12 @@ const severityBadge: Record<Severity, { label: string; className: string }> = {
 };
 
 export default function ScanPage() {
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const [url, setUrl] = useState("");
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [logLines, setLogLines] = useState<Array<{ severity: Severity; text: string }>>([]);
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
 
   const canStart = useMemo(() => {
     try {
@@ -52,31 +55,66 @@ export default function ScanPage() {
   }, []);
 
 
-  const runFakeScan = async () => {
+  const runScan = async () => {
     if (!canStart) return;
 
     setIsRunning(true);
-    setProgress(0);
-    setLogLines([]);
+    setProgress(10);
+    setLogLines([{ severity: "info", text: `Starting real VAPT scan → ${url}` }]);
+    setScanResult(null);
 
-    const steps: Array<{ severity: Severity; delayMs: number; text: string; progress: number }> = [
-      { severity: "info", delayMs: 300, text: `Starting scan → ${url}`, progress: 8 },
-      { severity: "success", delayMs: 650, text: "TLS handshake verified", progress: 25 },
-      { severity: "warning", delayMs: 900, text: "Missing header: Content-Security-Policy", progress: 42 },
-      { severity: "high", delayMs: 900, text: "Potential XSS sink found: /search?q=…", progress: 63 },
-      { severity: "critical", delayMs: 900, text: "SQLi pattern detected: /login?id=…", progress: 82 },
-      { severity: "success", delayMs: 900, text: "Scan completed. Review report below.", progress: 100 },
-    ];
+    // Simulate progress while waiting for backend
+    const progressInterval = setInterval(() => {
+      setProgress((p) => (p < 85 ? p + 5 : p));
+    }, 1000);
 
-    for (const step of steps) {
-       
-      await new Promise((r) => setTimeout(r, step.delayMs));
-      setProgress(step.progress);
-      setLogLines((prev) => [...prev, { severity: step.severity, text: step.text }]);
+    try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
 
+      const res = await fetch("/api/scan", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ url: url.trim() }),
+      });
+
+      const data = await res.json();
+      clearInterval(progressInterval);
+
+      if (!res.ok) {
+        throw new Error(data.message || "Scan failed");
+      }
+
+      setProgress(100);
+      setScanResult(data.scan);
+
+      // Convert findings to log lines for the terminal UI
+      const newLogLines = data.scan.findings.map((f: any) => {
+        let sev: Severity = "info";
+        if (f.severity === "critical") sev = "critical";
+        else if (f.severity === "high") sev = "high";
+        else if (f.severity === "medium") sev = "warning";
+        else if (f.severity === "low") sev = "success";
+        
+        return { severity: sev, text: `[${f.type.toUpperCase()}] ${f.message}` };
+      });
+      
+      setLogLines((prev) => [
+        ...prev, 
+        { severity: "success", text: "Target connected successfully" },
+        ...newLogLines,
+        { severity: "info", text: "Scan completed. Report ready." }
+      ]);
+      toast.success("Scan completed successfully");
+
+    } catch (err: any) {
+      clearInterval(progressInterval);
+      setProgress(0);
+      setLogLines((prev) => [...prev, { severity: "critical", text: err.message || "Unknown error" }]);
+      toast.error(err.message || "Failed to run scan");
+    } finally {
+      setIsRunning(false);
     }
-
-    setIsRunning(false);
   };
 
   return (
@@ -125,7 +163,7 @@ export default function ScanPage() {
                   <div className="md:col-span-3">
                     <Button
                       className="w-full"
-                      onClick={runFakeScan}
+                      onClick={runScan}
                       disabled={isRunning || !canStart}
                     >
                       <Scan className="mr-2 h-4 w-4" />
@@ -177,7 +215,8 @@ export default function ScanPage() {
               <CardContent className="p-6">
                 <h2 className="font-semibold mb-2">Report</h2>
                 <p className="text-sm text-muted-foreground mb-4">
-                  This page provides a functional UX shell. Next phase will wire to backend scan engine.
+                  The scan has been fully wired to the backend API. 
+                  Generate your VAPT report below.
                 </p>
 
                 <div className="space-y-3">
@@ -199,7 +238,13 @@ export default function ScanPage() {
                 </div>
 
                 <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Button variant="outline" disabled>
+                  <Button 
+                    variant="outline" 
+                    disabled={!scanResult}
+                    onClick={() => {
+                      if (scanResult) generateVaptReport(scanResult);
+                    }}
+                  >
                     <Download className="mr-2 h-4 w-4" />
                     Download PDF
                   </Button>
