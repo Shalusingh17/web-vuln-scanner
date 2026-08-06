@@ -815,6 +815,88 @@ app.post("/api/tools/portscan", authMiddleware, [
   }
 });
 
+app.post("/api/scan/dependencies", authMiddleware, [
+  body("packageJson").isString().notEmpty()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return jsonError(res, "Invalid input", 400, errors.array());
+
+    let pkgObj;
+    try {
+      pkgObj = JSON.parse(req.body.packageJson);
+    } catch (e) {
+      return jsonError(res, "Invalid package.json format", 400);
+    }
+
+    const dependencies = {
+      ...(pkgObj.dependencies || {}),
+      ...(pkgObj.devDependencies || {})
+    };
+
+    if (Object.keys(dependencies).length === 0) {
+      return res.status(200).json({
+        message: "No dependencies found to scan",
+        findings: [],
+        scannedCount: 0
+      });
+    }
+
+    const cleanVersion = (ver) => ver.replace(/^[\^\~>=<]+/, '');
+    
+    // Check with Google OSV API
+    const checkOSV = async (name, rawVersion) => {
+      const version = cleanVersion(rawVersion);
+      try {
+        const response = await axios.post("https://api.osv.dev/v1/query", {
+          version: version,
+          package: {
+            name: name,
+            ecosystem: "npm" // Assuming npm, but could be dynamic
+          }
+        });
+        
+        if (response.data && response.data.vulns && response.data.vulns.length > 0) {
+          return {
+            package: name,
+            version: version,
+            vulnerable: true,
+            vulns: response.data.vulns.map(v => ({
+              id: v.id,
+              summary: v.summary || "No summary available",
+              details: v.details || "",
+              severity: v.database_specific?.severity || "MEDIUM",
+              references: v.references?.map(r => r.url) || []
+            }))
+          };
+        }
+        return { package: name, version: version, vulnerable: false };
+      } catch (err) {
+        console.error(`[OSV Error] for ${name}@${version}:`, err.message);
+        return { package: name, version: version, vulnerable: false, error: true };
+      }
+    };
+
+    // We can do this in parallel, but limit concurrency if there are too many (e.g., >50)
+    // For simplicity, we just use Promise.all for now.
+    const scanPromises = Object.entries(dependencies).map(([name, ver]) => checkOSV(name, ver));
+    const results = await Promise.all(scanPromises);
+
+    const findings = results.filter(r => r.vulnerable);
+
+    return res.status(200).json({
+      message: "Dependency scan completed",
+      scannedCount: results.length,
+      vulnerableCount: findings.length,
+      findings
+    });
+
+  } catch (err) {
+    console.error("[SCA Error]", err.message);
+    return jsonError(res, "Dependency scan failed", 500);
+  }
+});
+
 // ─────────────────────────────────────────────────────
 // Database connection
 // ─────────────────────────────────────────────────────

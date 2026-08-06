@@ -284,6 +284,7 @@ export const TOOLS_DROPDOWN = [
   { label: "Vulnerability Scanner", href: "/dashboard/scan" },
   { label: "Container Security", href: "/dashboard/container" },
   { label: "Network Tools", href: "/dashboard/tools" },
+  { label: "Dependency Scanner", href: "/dashboard/sca" },
   { label: "Subdomain Finder", href: "/#feature-subdomain-finder" },
   { label: "SSL Checker", href: "/#feature-ssl-checker" },
 ];

@@ -182,6 +182,13 @@ export default function DashboardPage() {
               <Button
                 asChild
                 variant="outline"
+                className="border-fuchsia-500/30 bg-slate-900/40 text-fuchsia-300 hover:bg-fuchsia-500/10 hover:text-fuchsia-200"
+              >
+                <Link href="/dashboard/sca">Dependency Scanner</Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
                 className="border-indigo-500/30 bg-slate-900/40 text-indigo-300 hover:bg-indigo-500/10 hover:text-indigo-200"
               >
                 <Link href="/dashboard/container">Container Security</Link>
