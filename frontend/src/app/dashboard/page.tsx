@@ -45,7 +45,7 @@ const severityColors: Record<Severity, string> = {
 const cardClass = "border-cyan-500/20 bg-slate-900/50 shadow-lg shadow-cyan-500/5";
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
 
   const [url, setUrl] = useState("");
   const [isScanning, setIsScanning] = useState(false);
@@ -69,9 +69,12 @@ export default function DashboardPage() {
   useEffect(() => {
     const loadScans = async () => {
       try {
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
         const res = await fetch("/api/scans", {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
+          headers,
         });
         const parsed = await parseResponseJson<{ scans?: ScanResult[] }>(res);
         if (
@@ -100,9 +103,12 @@ export default function DashboardPage() {
     setCurrentScan(null);
 
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const res = await fetch("/api/scan", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ url: url.trim() }),
       });
 

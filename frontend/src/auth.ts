@@ -5,7 +5,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
-
+import jwt from "jsonwebtoken";
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     GitHub({
@@ -115,6 +115,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // Non-fatal — session will work without DB id
         }
       }
+
+      if (token.id && token.email && !token.backendToken) {
+        const payload = {
+          sub: token.id,
+          email: token.email,
+          role: "user",
+        };
+        // Use AUTH_SECRET to sign the backend token so the backend can verify it.
+        // Important: The backend must have JWT_SECRET set to the same value as AUTH_SECRET.
+        token.backendToken = jwt.sign(
+          payload,
+          process.env.AUTH_SECRET || "default_secret",
+          { expiresIn: "7d" }
+        );
+      }
+
       return token;
     },
 
@@ -124,6 +140,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (token?.id && session.user) {
         session.user.id = token.id as string;
+      }
+      if (token?.backendToken) {
+        // We cast session to any to bypass the default session type without extending it, 
+        // though in a real app you'd extend the Session type via a d.ts file.
+        (session as any).backendToken = token.backendToken;
       }
       return session;
     },
