@@ -2,8 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Script from "next/script";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/AuthContext";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Check, X, Zap, ChevronRight } from "lucide-react";
+import { Check, X, Zap, ChevronRight, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { GlassmorphicCard } from "@/components/ui/GlassmorphicCard";
@@ -114,9 +118,12 @@ const featureComparison = [
 ];
 
 export default function PricingPage() {
+  const router = useRouter();
+  const { token, user } = useAuth();
   const [currency, setCurrency] = useState<"INR" | "USD">("USD");
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const getCurrency = () => (currency === "USD" ? "$" : "₹");
 
@@ -132,12 +139,97 @@ export default function PricingPage() {
     return convertedPrice;
   };
 
+  const handleSubscribe = async (planId: string) => {
+    if (!user) {
+      toast.error("Please login to subscribe");
+      router.push("/auth/login");
+      return;
+    }
+    
+    if (planId === "free") {
+      router.push("/dashboard");
+      return;
+    }
 
+    if (planId === "enterprise") {
+      router.push("/contact");
+      return;
+    }
 
+    setLoadingPlan(planId);
+    try {
+      // 1. Create Order
+      const res = await fetch("/api/payment/create-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ plan: planId })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.message || "Failed to create order");
 
+      // 2. Initialize Razorpay
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_dummy", 
+        amount: data.amount,
+        currency: data.currency,
+        name: "VulnScanner",
+        description: `${planId.toUpperCase()} Plan Subscription`,
+        order_id: data.orderId,
+        handler: async function (response: any) {
+          try {
+            // 3. Verify Payment
+            const verifyRes = await fetch("/api/payment/verify", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                plan: planId
+              })
+            });
+            const verifyData = await verifyRes.json();
+            
+            if (!verifyRes.ok) throw new Error(verifyData.message || "Verification failed");
+            
+            toast.success(`Successfully subscribed to ${planId} plan!`);
+            router.push("/dashboard");
+          } catch (err: any) {
+            toast.error(err.message || "Payment verification failed");
+          }
+        },
+        prefill: {
+          name: user.name || "",
+          email: user.email || ""
+        },
+        theme: {
+          color: "#06b6d4" // Cyan-500
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any){
+        toast.error(response.error.description || "Payment failed");
+      });
+      rzp.open();
+      
+    } catch (err: any) {
+      toast.error(err.message || "Something went wrong");
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-foreground overflow-hidden">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <Navbar />
 
       {/* ──────────────────────────────────── HEADER ──────────────────────────────────── */}
@@ -277,17 +369,24 @@ export default function PricingPage() {
                     </div>
 
                     {/* CTA Button */}
-                    <Link href={plan.id === "enterprise" ? "/contact" : "/auth/register"}>
+                    <div onClick={() => handleSubscribe(plan.id)}>
                       <AnimatedButton
                         size="lg"
                         variant={plan.highlighted ? "primary" : "outline"}
                         glowing={plan.highlighted}
                         className="w-full"
+                        disabled={loadingPlan === plan.id}
                       >
-                        {plan.cta}
-                        <ChevronRight className="h-4 w-4 ml-2" />
+                        {loadingPlan === plan.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            {plan.cta}
+                            <ChevronRight className="h-4 w-4 ml-2" />
+                          </>
+                        )}
                       </AnimatedButton>
-                    </Link>
+                    </div>
                   </div>
 
                   {/* Features list */}

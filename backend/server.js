@@ -11,6 +11,8 @@ const { body, validationResult } = require("express-validator");
 const axios = require("axios");
 const dns = require("dns");
 const net = require("net");
+const crypto = require("crypto");
+const Razorpay = require("razorpay");
 
 const app = express();
 
@@ -69,6 +71,7 @@ const userSchema = new mongoose.Schema({
     match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   },
   passwordHash: { type: String, required: true },
+  plan: { type: String, enum: ["free", "pro", "enterprise"], default: "free" },
   role: { type: String, enum: ["user", "admin"], default: "user" },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
@@ -894,6 +897,96 @@ app.post("/api/scan/dependencies", authMiddleware, [
   } catch (err) {
     console.error("[SCA Error]", err.message);
     return jsonError(res, "Dependency scan failed", 500);
+  }
+});
+
+// ─────────────────────────────────────────────────────
+// Razorpay Payment Routes
+// ─────────────────────────────────────────────────────
+
+// Initialize Razorpay instance (using dummy keys if env not set for local dev, but real keys should be used)
+const getRazorpayInstance = () => {
+  return new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_dummy",
+    key_secret: process.env.RAZORPAY_KEY_SECRET || "dummy_secret"
+  });
+};
+
+app.post("/api/payment/create-order", authMiddleware, [
+  body("plan").isIn(["pro", "enterprise"])
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return jsonError(res, "Invalid input", 400, errors.array());
+
+    const { plan } = req.body;
+    let amount = 0;
+    
+    // In INR, amount is in paise (multiply by 100)
+    if (plan === "pro") amount = 4999 * 100;
+    else if (plan === "enterprise") amount = 19999 * 100;
+
+    const rzp = getRazorpayInstance();
+    
+    const options = {
+      amount, 
+      currency: "INR",
+      receipt: `receipt_order_${Date.now()}`
+    };
+
+    const order = await rzp.orders.create(options);
+
+    if (!order) return jsonError(res, "Failed to create order", 500);
+
+    return res.status(200).json({
+      message: "Order created successfully",
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency
+    });
+  } catch (err) {
+    console.error("[Razorpay Create Order Error]", err);
+    return jsonError(res, "Failed to create order", 500);
+  }
+});
+
+app.post("/api/payment/verify", authMiddleware, [
+  body("razorpay_order_id").isString().notEmpty(),
+  body("razorpay_payment_id").isString().notEmpty(),
+  body("razorpay_signature").isString().notEmpty(),
+  body("plan").isIn(["pro", "enterprise"])
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return jsonError(res, "Invalid input", 400, errors.array());
+
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan } = req.body;
+    
+    // Generate signature using our secret to compare
+    const secret = process.env.RAZORPAY_KEY_SECRET || "dummy_secret";
+    
+    const shasum = crypto.createHmac("sha256", secret);
+    shasum.update(`${razorpay_order_id}|${razorpay_payment_id}`);
+    const digest = shasum.digest("hex");
+
+    if (digest !== razorpay_signature) {
+      return jsonError(res, "Transaction is not legit!", 400);
+    }
+
+    // Signature matches, update user plan
+    const user = await User.findById(req.user.userId);
+    if (!user) return jsonError(res, "User not found", 404);
+
+    user.plan = plan;
+    await user.save();
+
+    return res.status(200).json({
+      message: "Payment successful and plan upgraded",
+      plan: user.plan
+    });
+  } catch (err) {
+    console.error("[Razorpay Verify Error]", err);
+    return jsonError(res, "Failed to verify payment", 500);
   }
 });
 
