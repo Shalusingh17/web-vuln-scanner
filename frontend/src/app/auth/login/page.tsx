@@ -46,7 +46,7 @@ function LoginForm() {
   }>({});
 
   const urlError = searchParams.get("error");
-  const displayError = errors.general || (urlError ? (urlError === "CredentialsSignin" ? "Invalid email or password." : "Authentication failed.") : "");
+  const displayError = errors.general || (urlError ? (urlError === "CredentialsSignin" ? "Invalid email or password." : `Authentication failed: ${urlError}`) : "");
 
   const validate = () => {
     const newErrors: typeof errors = {};
